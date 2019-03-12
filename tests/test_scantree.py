@@ -31,9 +31,47 @@ def assert_dir_entry_equal(de1, de2):
         ('stat', {'follow_symlinks': False}),
         ('inode', {})
     ]:
-        assert getattr(de1, method)(**kwargs) == getattr(de2, method)(**kwargs)
-        # done two times to verify caching!
-        assert getattr(de1, method)(**kwargs) == getattr(de2, method)(**kwargs)
+        for attempt in range(1, 3):  # done two times to verify caching!
+            res1 = getattr(de1, method)(**kwargs)
+            res2 = getattr(de2, method)(**kwargs)
+            if not res1 == res2:
+                raise AssertionError(
+                    '\nde1.{method}(**{kwargs}) == {res1} != '
+                    '\nde2.{method}(**{kwargs}) == {res2} '
+                    '\n(attempt: {attempt})'
+                    '\nde1: {de1}'
+                    '\nde2: {de2}'.format(
+                        method=method,
+                        kwargs=kwargs,
+                        res1=res1,
+                        res2=res2,
+                        attempt=attempt,
+                        de1=de1,
+                        de2=de2
+                    )
+                )
+
+
+def assert_recursion_path_equal(p1, p2):
+    assert p1.root == p2.root
+    assert p1.relative == p2.relative
+    assert p1.real == p2.real
+    assert p1.absolute == p2.absolute
+    assert_dir_entry_equal(p1, p2)
+
+
+def assert_dir_node_equal(dn1, dn2):
+    assert_recursion_path_equal(dn1.path, dn2.path)
+    if isinstance(dn1, LinkedDir):
+        assert isinstance(dn2, LinkedDir)
+    elif isinstance(dn1, CyclicLinkedDir):
+        assert isinstance(dn2, CyclicLinkedDir)
+        assert_recursion_path_equal(dn1.target_path, dn2.target_path)
+    else:
+        for path1, path2 in zip(dn1.files, dn2.files):
+            assert_recursion_path_equal(path1, path2)
+        for sub_dn1, sub_dn2 in zip(dn1.directories, dn2.directories):
+            assert_dir_node_equal(sub_dn1, sub_dn2)
 
 
 def create_basic_entries(local_path):
@@ -289,7 +327,7 @@ class TestScantree(object):
             ]
         )
 
-        assert tree == tree_expected
+        assert_dir_node_equal(tree, tree_expected)
 
     def test_not_a_directory(self, tmpdir):
         tmpdir.ensure('root/f1')
@@ -336,7 +374,7 @@ class TestScantree(object):
             ]
         )
 
-        assert tree == tree_expected
+        assert_dir_node_equal(tree, tree_expected)
 
         with pytest.raises(SymlinkRecursionError) as exc_info:
             scantree(root, allow_cyclic_links=False)
@@ -391,8 +429,8 @@ class TestScantree(object):
                 )
             ]
         )
-        assert tree_follow_false == tree_follow_false_expected
-        assert tree_follow_true == tree_follow_true_expected
+        assert_dir_node_equal(tree_follow_false, tree_follow_false_expected)
+        assert_dir_node_equal(tree_follow_true, tree_follow_true_expected)
 
     def test_include_empty(self, tmpdir):
         root = tmpdir.join('root')
@@ -413,8 +451,8 @@ class TestScantree(object):
             directories=[DirNode(path=rp('d1'))]
         )
 
-        assert tree_default == tree_empty_true_expected
-        assert tree_empty_true == tree_empty_true_expected
+        assert_dir_node_equal(tree_default, tree_empty_true_expected)
+        assert_dir_node_equal(tree_empty_true, tree_empty_true_expected)
 
         with pytest.raises(ValueError):
             scantree(root, include_empty=False)
@@ -424,7 +462,7 @@ class TestScantree(object):
         for i in range(num_files):
             tmpdir.join('file_{}'.format(i)).ensure()
 
-        wait_time = 0.05
+        wait_time = 0.1
         expected_min_elapsed = wait_time * num_files
         slow_file_apply = get_slow_identity_f(wait_time)
         start = time()
@@ -447,7 +485,7 @@ class TestScantree(object):
         for i in range(num_links):
             tmpdir.join('link_{}'.format(i)).mksymlinkto(target_file)
 
-        wait_time = 0.01
+        wait_time = 0.1
         expected_min_elapsed = wait_time * (num_links + 1)
         slow_file_apply = get_slow_identity_f(wait_time)
         start = time()
@@ -476,7 +514,7 @@ class TestScantree(object):
                 tmpdir.join('link_{}_{}'.format(i, j)).mksymlinkto(target_file)
         num_links = num_links_per_file * len(target_file_names)
 
-        wait_time = 0.01
+        wait_time = 0.1
         jobs = 2
         expected_min_elapsed = (
             wait_time * (num_links + len(target_file_names))

@@ -215,6 +215,60 @@ class TestDirNode(object):
         )
         assert dn_new == ((2 + 4) ** 2 + 1)
 
+    def test_leafpaths_filepaths(self):
+        rp_file1 = get_mock_recursion_path('file1')
+        rp_dir1 = get_mock_recursion_path('dir1')
+        rp_file2 = get_mock_recursion_path('dir1/file2')
+        rp_linked_dir = get_mock_recursion_path('linked_dir')
+        rp_cyclic = get_mock_recursion_path('cyclic')
+        rp_cyclic_target = get_mock_recursion_path('cyclic_target')
+
+        ordered_leafpaths = [rp_cyclic, rp_file2, rp_file1, rp_linked_dir]
+        ordered_filepaths = [rp_file2, rp_file1]
+
+        tree = self.test_class(
+            path=get_mock_recursion_path(''),
+            files=[rp_file1],
+            directories=[
+                CyclicLinkedDir(path=rp_cyclic, target_path=rp_cyclic_target),
+                self.test_class(
+                    path=rp_dir1,
+                    files=[rp_file2]
+                ),
+                LinkedDir(path=rp_linked_dir),
+            ]
+        )
+        assert tree.leafpaths() == ordered_leafpaths
+        assert tree.filepaths() == ordered_filepaths
+
+
+class TestLinkedDir(object):
+
+    def test_empty(self):
+        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
+        with pytest.raises(NotImplementedError):
+            ld.empty
+
+    def test_apply(self):
+        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
+        res = ld.apply(dir_apply=lambda x: (x, 1), file_apply=None)
+        assert res == (ld, 1)
+
+
+class TestCyclicLinkedDir(object):
+
+    def test_empty(self):
+        cld = CyclicLinkedDir(
+            path=get_mock_recursion_path('path/to/cld'),
+            target_path=get_mock_recursion_path('target')
+        )
+        assert cld.empty == False
+
+    def test_apply(self):
+        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
+        res = ld.apply(dir_apply=lambda x: (x, 1), file_apply=None)
+        assert res == (ld, 1)
+
 
 class TestRecursionFilterBase(object):
     from scantree import RecursionFilter as test_class

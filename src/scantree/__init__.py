@@ -132,7 +132,7 @@ def _traverse_recursive(
 
     dirs = []
     files = []
-    for subpath in filter_(path.scandir()):
+    for subpath in sorted(filter_(path.scandir())):
         if subpath.is_dir():
             dir_node = _traverse_recursive(subpath, **fwd_kwargs)
             if include_empty or not _is_empty_dir_node(dir_node):

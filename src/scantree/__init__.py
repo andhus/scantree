@@ -368,7 +368,7 @@ class DirNode(object):
 
         return sorted(leafs, key=lambda path: path.relative)
 
-    def filepaths(self):  # TODO test
+    def filepaths(self):
         files = []
 
         def file_apply(path):

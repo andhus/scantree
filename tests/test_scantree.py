@@ -490,7 +490,6 @@ class TestScantree(object):
         root = tmpdir.join('root')
         root.join('d1').ensure(dir=True)
 
-        tree_default = scantree(root)
         tree_empty_true = scantree(root, include_empty=True)
 
         def rp(relative):
@@ -505,11 +504,11 @@ class TestScantree(object):
             directories=[DirNode(path=rp('d1'))]
         )
 
-        assert_dir_node_equal(tree_default, tree_empty_true_expected)
         assert_dir_node_equal(tree_empty_true, tree_empty_true_expected)
 
-        with pytest.raises(ValueError):
-            scantree(root, include_empty=False)
+        tree_empty_false = scantree(root, include_empty=False)
+        tree_empty_false_expected = DirNode(path=rp(''))
+        assert tree_empty_false == tree_empty_false_expected
 
     def test_multiprocess_speedup(self, tmpdir):
         num_files = 10

@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import os
 
 from multiprocessing.pool import Pool
+from pathlib import Path
 
 import attr
 
@@ -26,7 +27,7 @@ def scantree(
     follow_links=True,
     allow_cyclic_links=True,
     cache_file_apply=False,
-    include_empty=True,
+    include_empty=False,
     jobs=1
 ):
     _verify_is_directory(directory)
@@ -49,9 +50,6 @@ def scantree(
         include_empty=include_empty,
         parents={path.real: path},
     )
-
-    if _is_empty_dir_node(root_dir_node) and not include_empty:
-        raise ValueError('{}: Nothing to hash'.format(directory))
 
     result = dir_apply(root_dir_node)
 
@@ -151,7 +149,7 @@ class RecursionPath(object):
     root = attr.ib()
     relative = attr.ib()
     real = attr.ib()
-    _dir_entry = attr.ib()
+    _dir_entry = attr.ib(cmp=False)
     """Track the recursion path.
 
     So why not use pathlib.Path:
@@ -210,7 +208,10 @@ class RecursionPath(object):
         return self._dir_entry.inode()
 
     def __fspath__(self):
-        return self.real
+        return self.absolute
+
+    def as_pathlib(self):
+        return Path(self.absolute)
 
     @staticmethod
     def _getstate(self):
@@ -345,6 +346,10 @@ class DirNode(object):
     @property
     def empty(self):
         return not (self.directories or self.files)
+
+    @property
+    def entries(self):
+        return self.files + self.directories
 
     def apply(self, dir_apply, file_apply):
         dir_node = DirNode(

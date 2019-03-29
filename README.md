@@ -4,7 +4,7 @@
 Recursive directory iterator supporting:
 - flexible filtering including wildcard path matching
 - in memory representation of file-tree (for repeated access)
-- efficient access to directory entry properties (scandir.DirEntry interface) extended with real path and path relative to the recursion root directory
+- efficient access to directory entry properties (`posix.DirEntry` interface) extended with real path and path relative to the recursion root directory
 - detection and handling of cyclic symlinks
 
 ## Installation
@@ -19,13 +19,29 @@ Get matching file paths:
 ```python
 from scantree import scantree, RecursionFilter
 
-tree = scantree('.', RecursionFilter(match=['*.txt']))
+tree = scantree('/path/to/dir', RecursionFilter(match=['*.txt']))
 print([path.relative for path in tree.filepaths()])
 print([path.real for path in tree.filepaths()])
 ```
 ```bash
 ['d1/d2/file3.txt', 'd1/file2.txt', 'file1.txt']   
 ['/path/to/other_dir/file3.txt', '/path/to/dir/d1/file2.txt', '/path/to/dir/file1.txt']   
+```
+Access metadata of directory entries in file tree:
+```python
+d2 = tree.directories[0].directories[0]
+print(type(d2))
+print(d2.path.absolute)
+print(d2.path.real)
+print(d2.path.is_symlink())
+print(d2.files[0].relative)
+```
+```
+scantree._node.DirNode
+/path/to/dir/d1/d2
+/path/to/other_dir
+True
+d1/d2/file3.txt
 ```
 
 Aggregate information by operating on tree:

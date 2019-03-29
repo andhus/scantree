@@ -65,7 +65,7 @@ def scantree(
     without having to rerun expensive OS calls.
 
 
-    # Arguments
+    # Arguments:
         directory (str | os.PathLike): The directory to scan.
         recursion_filter (f: f([RecursionPath]) -> [RecursionPath]): A filter
             function, defining which files to include and which subdirectories to
@@ -87,7 +87,8 @@ def scantree(
             known without following the link). Default `True`.
         allow_cyclic_links (bool): If set to `False`, a `SymlinkRecursionError` is
             raised on detection of cyclic symbolic links, if `True` (default), the
-            cyclic link is represented by a `CyclicLinkedDir` object.
+            cyclic link is represented by a `CyclicLinkedDir` object. See "Cyclic
+            Links Handling" section below for further details.
         cache_file_apply: If set to `True`, the `file_apply` result will be cached
             by *real* path. Default `False`.
         include_empty (bool): If set to `True`, empty directories are included in
@@ -101,15 +102,69 @@ def scantree(
             NOTE: if jobs is `None` or > 1, the entire file tree will first be stored
             in memory before applying `file_apply` and `dir_apply`.
 
-    # Return
+    # Returns:
         The `object` returned by `dir_apply` on the `DirNode` for the top level
         `directory`. If the default value ("identity" function: `lambda x: x`) is
         used for `dir_apply`, it will be the `DirNode` representing the root node of
         the file tree.
 
-    # Raises
+    # Raises:
         SymlinkRecursionError: if `allow_cyclic_links=False` and any cyclic symbolic
             links are detected.
+
+    # Cyclic Links Handling:
+        Symbolically linked directories can create cycles in the, otherwise acyclic,
+        graph representing the file tree. If not handled properly, this leads to
+        infinite recursion when traversing the file tree (this is e.g. the case for
+        Python's built-in `os.walk(directory, followlinks=True)`).
+
+        Sometimes multiple links form cycles together, therefore - without loss of
+        generality - cyclic links are defined as:
+
+            The first occurrence of a link to a directory that has already been
+            visited on the current branch of recursion.
+
+        With `allow_cyclic_links=True` any link to such a directory is represented
+        by the object `CyclicLinkedDir(path=..., target_path=...)` where `path` is
+        the `RecursionPath` to the link and `target_path` the `RecursionPath` to the
+        parent directory that is the target of the link.
+
+        In the example below there are cycles on all branches A/B, A/C and D.
+
+            root/
+            |__A/
+            |  |__B/
+            |  |  |__toA@ -> ..
+            |  |__C/
+            |     |__toA@ -> ..
+            |__D/
+               |__toB@ -> ../A/B
+
+        In this case, the symlinks with relative paths A/B/toA, A/C/toA and
+        D/toB/toA/B/toA will be represented by a `CyclicLinkedDir` object. Note that
+        for the third branch, the presence of cyclic links can be *detected* already
+        at D/toB/toA/B (since B is already visited) but it is D/toB/toA/B/toA which
+        is considered a cyclic link (and gets represented by a `CyclicLinkedDir`).
+        This reflects the fact that it is the toA that's "causing" the cycle, not
+        D/toB or D/toB/toA/B (which is not even a link), and at D/toB/toA/ the cycle
+        can not yet be detected.
+
+        Below is another example where multiple links are involved in forming cycles
+        as well as links which absolute path is external to the root directory for
+        the recursion. In this case the symlinks with relative paths A/toB/toA,
+        B/toA/toB and C/toD/toC are considered cyclic links for
+        `scandir('/path/to/root')`.
+
+            /path/to/root/
+                     |__A/
+                     |  |__toB@ -> ../B
+                     |__B/
+                     |  |__toA@ -> /path/to/root/A
+                     |__C/
+                        |__toD@ -> /path/to/D
+
+            /path/to/D/
+                     |__toC@ -> /path/to/root/C
     """
     _verify_is_directory(directory)
 
@@ -202,7 +257,7 @@ def _scantree_recursive(
 ):
     """The underlying recursive implementation of scantree.
 
-    # Arguments
+    # Arguments:
         path (RecursionPath): the recursion path relative the directory where
             recursion was initialized.
         recursion_filter (f: f([RecursionPath]) -> [RecursionPath]): A filter
@@ -228,10 +283,10 @@ def _scantree_recursive(
         parents ({str: RecursionPath}): Mapping from real path (`str`) to
             `RecursionPath` of parent directories.
 
-    # Return
+    # Returns:
         `DirNode` for the directory at `path`.
 
-    # Raises
+    # Raises:
         SymlinkRecursionError: if `allow_cyclic_links=False` and any cyclic symbolic
             links are detected.
     """

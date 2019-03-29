@@ -57,10 +57,6 @@ class LinkedDir(object):
     path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
 
     @property
-    def empty(self):
-        raise AttributeError('`empty` is undefined for `LinkedDir` nodes.')
-
-    @property
     def directories(self):
         raise AttributeError(
             '`directories` is undefined for `LinkedDir` nodes. Use e.g. '
@@ -84,6 +80,10 @@ class LinkedDir(object):
             'directory'
         )
 
+    @property
+    def empty(self):
+        raise AttributeError('`empty` is undefined for `LinkedDir` nodes.')
+
     def apply(self, dir_apply, file_apply=None):
         return dir_apply(self)
 
@@ -92,6 +92,30 @@ class LinkedDir(object):
 class CyclicLinkedDir(object):
     path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
     target_path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
+
+    @property
+    def directories(self):
+        raise AttributeError(
+            '`directories` is undefined for `CyclicLinkedDir` to avoid infinite '
+            'recursion. `target_path` property contains the `RecursionPath` for the '
+            'target directory.'
+        )
+
+    @property
+    def files(self):
+        raise AttributeError(
+            '`files` is undefined for `CyclicLinkedDir` to avoid infinite '
+            'recursion. `target_path` property contains the `RecursionPath` for the '
+            'target directory.'
+        )
+
+    @property
+    def entries(self):
+        raise AttributeError(
+            '`entries` is undefined for `CyclicLinkedDir` to avoid infinite '
+            'recursion. `target_path` property contains the `RecursionPath` for the '
+            'target directory.'
+        )
 
     @property
     def empty(self):

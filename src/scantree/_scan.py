@@ -90,9 +90,9 @@ def scantree(
             cyclic link is represented by a `CyclicLinkedDir` object.
         cache_file_apply: If set to `True`, the `file_apply` result will be cached
             by *real* path. Default `False`.
-        include_empty: If set to `True`, empty directories are included in the result
-            of the recursive scanning, represented by an empty directory node:
-            `DirNode(directories=[], files=[])`. If `False` (default), empty
+        include_empty (bool): If set to `True`, empty directories are included in
+            the result of the recursive scanning, represented by an empty directory
+            node: `DirNode(directories=[], files=[])`. If `False` (default), empty
             directories are not included in the parent directory node (and
             subsequently never passed to `dir_apply`).
         jobs (int | None): If `1` (default), no multiprocessing is used. If jobs > 1,
@@ -110,7 +110,6 @@ def scantree(
     # Raises
         SymlinkRecursionError: if `allow_cyclic_links=False` and any cyclic symbolic
             links are detected.
-
     """
     _verify_is_directory(directory)
 
@@ -124,7 +123,7 @@ def scantree(
 
     root_dir_node = _scantree_recursive(
         path=path,
-        filter_=recursion_filter,
+        recursion_filter=recursion_filter,
         file_apply=file_apply,
         dir_apply=dir_apply,
         follow_links=follow_links,
@@ -139,6 +138,10 @@ def scantree(
 
 
 def _scantree_multiprocess(**kwargs):
+    """Multiprocess implementation of scantree.
+
+    Note that it is only the `file_apply` function that is parallelized.
+    """
     file_apply = kwargs.pop('file_apply')
     dir_apply = kwargs.pop('dir_apply')
     jobs = kwargs.pop('jobs')
@@ -165,6 +168,8 @@ def _scantree_multiprocess(**kwargs):
 
 
 def _verify_is_directory(directory):
+    """Verify that `directory` path exists and is a directory, otherwise raise
+    ValueError"""
     directory = fspath(directory)
     if not os.path.exists(directory):
         raise ValueError('{}: No such directory'.format(directory))
@@ -173,6 +178,8 @@ def _verify_is_directory(directory):
 
 
 def _cached_by_realpath(file_apply):
+    """Wrapps the `file_apply` function with a cache, if `path.real` is already in
+    the cache, the cached value is returned"""
     cache = {}
 
     def file_apply_cached(path):
@@ -185,7 +192,7 @@ def _cached_by_realpath(file_apply):
 
 def _scantree_recursive(
     path,
-    filter_,
+    recursion_filter,
     file_apply,
     dir_apply,
     follow_links,
@@ -193,7 +200,41 @@ def _scantree_recursive(
     include_empty,
     parents,
 ):
-    """TODO"""
+    """The underlying recursive implementation of scantree.
+
+    # Arguments
+        path (RecursionPath): the recursion path relative the directory where
+            recursion was initialized.
+        recursion_filter (f: f([RecursionPath]) -> [RecursionPath]): A filter
+            function, defining which files to include and which subdirectories to
+            scan, e.g. an instance of `scantree.RecursionFilter`.
+        file_apply (f: f(RecursionPath) -> object): The function to apply to the
+            `RecursionPath` for each file. Default "identity", i.e. `lambda x: x`.
+        dir_apply (f: f(DirNode) -> object): The function to apply to the `DirNode`
+            for each (sub) directory. Default "identity", i.e. `lambda x: x`.
+        follow_links (bool): Whether to follow symbolic links for not, i.e. to
+            continue the recursive scanning in linked directories. If False, linked
+            directories are represented by the `LinkedDir` object which does e.g.
+            not have the `files` and `directories` properties (as these cannot be
+            known without following the link). Default `True`.
+        allow_cyclic_links (bool): If set to `False`, a `SymlinkRecursionError` is
+            raised on detection of cyclic symbolic links, if `True` (default), the
+            cyclic link is represented by a `CyclicLinkedDir` object.
+        include_empty (bool): If set to `True`, empty directories are included in
+            the result of the recursive scanning, represented by an empty directory
+            node: `DirNode(directories=[], files=[])`. If `False` (default), empty
+            directories are not included in the parent directory node (and
+            subsequently never passed to `dir_apply`).
+        parents ({str: RecursionPath}): Mapping from real path (`str`) to
+            `RecursionPath` of parent directories.
+
+    # Return
+        `DirNode` for the directory at `path`.
+
+    # Raises
+        SymlinkRecursionError: if `allow_cyclic_links=False` and any cyclic symbolic
+            links are detected.
+    """
     fwd_kwargs = vars()
     del fwd_kwargs['path']
 
@@ -212,7 +253,7 @@ def _scantree_recursive(
 
     dirs = []
     files = []
-    for subpath in sorted(filter_(path.scandir())):
+    for subpath in sorted(recursion_filter(path.scandir())):
         if subpath.is_dir():
             dir_node = _scantree_recursive(subpath, **fwd_kwargs)
             if include_empty or not is_empty_dir_node(dir_node):

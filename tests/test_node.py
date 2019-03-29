@@ -75,19 +75,26 @@ class TestDirNode(object):
 
 
 class TestLinkedDir(object):
+    test_class = LinkedDir
+
+    def test_undefined_attributes(self):
+        ld = self.test_class(path=get_mock_recursion_path('path/to/ld'))
+        for attribute in ['files', 'directory', 'entries']:
+            with pytest.raises(AttributeError):
+                getattr(ld, attribute)
 
     def test_empty(self):
-        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
-        with pytest.raises(NotImplementedError):
+        ld = self.test_class(path=get_mock_recursion_path('path/to/ld'))
+        with pytest.raises(AttributeError):
             ld.empty
 
     def test_apply(self):
-        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
+        ld = self.test_class(path=get_mock_recursion_path('path/to/ld'))
         res = ld.apply(dir_apply=lambda x: (x, 1), file_apply=None)
         assert res == (ld, 1)
 
 
-class TestCyclicLinkedDir(object):
+class TestCyclicLinkedDir(TestLinkedDir):
 
     def test_empty(self):
         cld = CyclicLinkedDir(
@@ -95,8 +102,3 @@ class TestCyclicLinkedDir(object):
             target_path=get_mock_recursion_path('target')
         )
         assert cld.empty == False
-
-    def test_apply(self):
-        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
-        res = ld.apply(dir_apply=lambda x: (x, 1), file_apply=None)
-        assert res == (ld, 1)

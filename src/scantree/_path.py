@@ -5,10 +5,10 @@ import os
 import attr
 
 from .compat import (
-    DirEntry,
-    scandir,
     Path,
-    fspath
+    fspath,
+    scandir,
+    DirEntry,
 )
 
 
@@ -45,8 +45,7 @@ class RecursionPath(object):
         """Scan the underlying directory.
 
         # Returns:
-            A generator of `RecursionPath`:s representing the entries
-
+            A generator of `RecursionPath`:s representing the directory entries.
         """
         return (self._join(dir_entry) for dir_entry in scandir(self.absolute))
 
@@ -101,6 +100,7 @@ class RecursionPath(object):
         return self.absolute
 
     def as_pathlib(self):
+        """Get a pathlib version of this path."""
         return Path(self.absolute)
 
     @staticmethod
@@ -125,6 +125,13 @@ RecursionPath.__setstate__ = RecursionPath._setstate
 
 @attr.s(slots=True, cmp=False)
 class DirEntryReplacement(object):
+    """Pure python implementation of the `DirEntry` interface (found in the external
+    `scandir` module in Python < 3.5 or builtin `posix` module in Python >= 3.5)
+
+    A `DirEntry` cannot be instantiated directly (only returned from a call to
+    `scandir`). This class offers a drop in replacement. Useful in testing and for
+    representing the root directory for `scantree` implementation.
+    """
     path = attr.ib(converter=fspath)
     name = attr.ib()
     _is_dir = attr.ib(init=False, default=None)

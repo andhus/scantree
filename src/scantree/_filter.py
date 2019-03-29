@@ -77,7 +77,7 @@ class RecursionFilter(object):
             paths ([RecursionPath]): The recursion paths to filter.
 
         # Returns:
-            A generator of (filtered) recursion paths.
+            A generator of (filtered) recursion paths.
         """
         for path in paths:
             if self.include(path):

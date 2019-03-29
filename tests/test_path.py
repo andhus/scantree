@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
+from pathlib import Path
+
 import pytest
 
-from scantree.compat import scandir
+from scantree.compat import scandir, fspath
 from scantree import DirEntryReplacement
 from scantree.test_utils import assert_dir_entry_equal
 
@@ -103,3 +105,9 @@ class TestRecursionPath(object):
         assert isinstance(dir_entry, DirEntryReplacement)
         rpath.__setstate__(state)
         assert rpath._dir_entry is dir_entry
+
+    def test_as_pathlib(self, tmpdir):
+        rpath = self.test_class.from_root(tmpdir)
+        pathlib_path = rpath.as_pathlib()
+        assert isinstance(pathlib_path, Path)
+        assert fspath(pathlib_path) == rpath.absolute

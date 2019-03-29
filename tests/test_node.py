@@ -25,8 +25,8 @@ class TestDirNode(object):
 
     def test_init(self):
         dn = self.test_class(RecursionPath.from_root('.'), [], [None])
-        assert dn.directories == tuple()
-        assert dn.files == (None,)
+        assert dn.directories == (None,)
+        assert dn.files == tuple()
 
     def test_empty(self):
         dn = self.test_class(RecursionPath.from_root('.'), [], [])
@@ -73,32 +73,49 @@ class TestDirNode(object):
         assert tree.leafpaths() == ordered_leafpaths
         assert tree.filepaths() == ordered_filepaths
 
+    def test_entries(self):
+        dn = self.test_class(
+            RecursionPath.from_root('.'),
+            files=[None],
+            directories=['d1', 'd2']
+        )
+        assert dn.entries == dn.files + dn.directories
+
 
 class TestLinkedDir(object):
     test_class = LinkedDir
 
+    @staticmethod
+    def get_default_kwargs():
+        return {'path': get_mock_recursion_path('path/to/ld')}
+
     def test_undefined_attributes(self):
-        ld = self.test_class(path=get_mock_recursion_path('path/to/ld'))
-        for attribute in ['files', 'directory', 'entries']:
+        ld = self.test_class(**self.get_default_kwargs())
+        for attribute in ['files', 'directories', 'entries']:
             with pytest.raises(AttributeError):
                 getattr(ld, attribute)
 
     def test_empty(self):
-        ld = self.test_class(path=get_mock_recursion_path('path/to/ld'))
+        ld = self.test_class(**self.get_default_kwargs())
         with pytest.raises(AttributeError):
             ld.empty
 
     def test_apply(self):
-        ld = self.test_class(path=get_mock_recursion_path('path/to/ld'))
+        ld = self.test_class(**self.get_default_kwargs())
         res = ld.apply(dir_apply=lambda x: (x, 1), file_apply=None)
         assert res == (ld, 1)
 
 
 class TestCyclicLinkedDir(TestLinkedDir):
+    test_class = CyclicLinkedDir
+
+    @staticmethod
+    def get_default_kwargs():
+        return {
+            'path': get_mock_recursion_path('path/to/ld'),
+            'target_path': get_mock_recursion_path('target')
+        }
 
     def test_empty(self):
-        cld = CyclicLinkedDir(
-            path=get_mock_recursion_path('path/to/cld'),
-            target_path=get_mock_recursion_path('target')
-        )
+        cld = self.test_class(**self.get_default_kwargs())
         assert cld.empty == False

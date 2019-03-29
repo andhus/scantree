@@ -20,8 +20,8 @@ class DirNode(object):
             applied to the files of this directory.
     """
     path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
-    directories = attr.ib(default=tuple(), converter=tuple)
     files = attr.ib(default=tuple(), converter=tuple)
+    directories = attr.ib(default=tuple(), converter=tuple)
 
     @property
     def empty(self):

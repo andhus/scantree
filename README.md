@@ -124,7 +124,7 @@ assert (
 )
 ```
 
-Inspect symlinked directories:
+Inspect symlinks:
 ```python
 from scantree import CyclicLinkedDir
 

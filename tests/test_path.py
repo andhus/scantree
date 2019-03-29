@@ -1,10 +1,8 @@
 from __future__ import print_function, division
 
-from pathlib import Path
-
 import pytest
 
-from scantree.compat import scandir, fspath
+from scantree.compat import scandir, fspath, Path
 from scantree import DirEntryReplacement
 from scantree.test_utils import assert_dir_entry_equal
 

@@ -2,27 +2,34 @@ from __future__ import print_function, division
 
 import os
 
-from pathlib import Path
-
 import attr
 
-from .compat import DirEntry, fspath, scandir
+from .compat import (
+    DirEntry,
+    scandir,
+    Path,
+    fspath
+)
 
 
-@attr.s(slots=True)
+@attr.s(slots=True)  # TODO consider make frozen.
 class RecursionPath(object):
+    """Caches the properties of directory entries including the path relative to the
+    root directory for recursion.
+
+    NOTE: this class is normally only ever instantiated by the `scantree` function.
+
+    The class provides the `DirEntry` interface (found in the external `scandir`
+    module in Python < 3.5 or builtin `posix` module in Python >= 3.5).
+    """
     root = attr.ib()
     relative = attr.ib()
     real = attr.ib()
     _dir_entry = attr.ib(cmp=False)
-    """Track the recursion path.
 
-    So why not use pathlib.Path:
-    - keep track of real path but only do fs check on follow link
-    - use scandir/DirEntry's caching of e.g. is_dir/is_file for speedup.
-    """
     @classmethod
     def from_root(cls, directory):
+        """Instantiate a `RecursionPath` from given directory."""
         if isinstance(directory, (DirEntry, DirEntryReplacement)):
             dir_entry = directory
         else:
@@ -35,22 +42,40 @@ class RecursionPath(object):
         )
 
     def scandir(self):
+        """Scan the underlying directory.
+
+        # Returns:
+            A generator of `RecursionPath`:s representing the entries
+
+        """
         return (self._join(dir_entry) for dir_entry in scandir(self.absolute))
 
     def _join(self, dir_entry):
         relative = os.path.join(self.relative, dir_entry.name)
         real = os.path.join(self.real, dir_entry.name)
         if dir_entry.is_symlink():
+            # For large number of files/directories it improves performance
+            # significantly to only call `os.realpath` when we are actually
+            # encountering a symlink.
             real = os.path.realpath(real)
 
         return attr.evolve(self, relative=relative, real=real, dir_entry=dir_entry)
 
     @property
     def absolute(self):
+        """The absolute path to this entry"""
+        if self.relative == '':
+            return self.root  # don't join in this case as that appends trailing '/'
         return os.path.join(self.root, self.relative)
 
     @property
     def path(self):
+        """The path property according `DirEntry` interface.
+
+        NOTE: this property is only here to fully implement the `DirEntry` interface
+        (which is useful in comparison etc.). It is recommended to use one on of
+        (the well defined) `real`, `relative` or `absolute` properties instead.
+        """
         return self._dir_entry.path
 
     @property

@@ -2,7 +2,12 @@ from __future__ import print_function, division
 
 import pytest
 
-from scantree import RecursionPath, DirNode, LinkedDir, CyclicLinkedDir
+from scantree import (
+    RecursionPath,
+    DirNode,
+    LinkedDir,
+    CyclicLinkedDir
+)
 from scantree.test_utils import get_mock_recursion_path
 
 
@@ -16,7 +21,7 @@ def create_basic_entries(local_path):
 
 
 class TestDirNode(object):
-    from scantree import DirNode as test_class
+    test_class = DirNode
 
     def test_init(self):
         dn = self.test_class(RecursionPath.from_root('.'), [], [None])

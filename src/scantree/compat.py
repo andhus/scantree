@@ -25,3 +25,6 @@ except ImportError:
         if path is not None:
             path = fspath(path)
         return _scandir(path, *args, **kwargs)
+
+
+from os import fspath

@@ -58,7 +58,31 @@ class LinkedDir(object):
 
     @property
     def empty(self):
-        raise NotImplementedError('`empty` is undefined for `LinkedDir` nodes.')
+        raise AttributeError('`empty` is undefined for `LinkedDir` nodes.')
+
+    @property
+    def directories(self):
+        raise AttributeError(
+            '`directories` is undefined for `LinkedDir` nodes. Use e.g. '
+            '`[de for de in scandir(linked_dir.path.real) if de.is_dir()]` '
+            'to get a list of the sub directories of the linked directory'
+        )
+
+    @property
+    def files(self):
+        raise AttributeError(
+            '`files` is undefined for `LinkedDir` nodes. Use e.g. '
+            '`[de for de in scandir(linked_dir.path.real) if de.is_file()]` '
+            ' to get a list of the files of the linked directory'
+        )
+
+    @property
+    def entries(self):
+        raise AttributeError(
+            '`entries` is undefined for `LinkedDir` nodes. Use e.g. '
+            '`scandir(linked_dir.path.real)` to get the entries of the linked '
+            'directory'
+        )
 
     def apply(self, dir_apply, file_apply=None):
         return dir_apply(self)
@@ -78,7 +102,7 @@ class CyclicLinkedDir(object):
         return dir_apply(self)
 
 
-def _is_empty_dir_node(dir_node):
+def is_empty_dir_node(dir_node):
     return isinstance(dir_node, DirNode) and dir_node.empty
 
 

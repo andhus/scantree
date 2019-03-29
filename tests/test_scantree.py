@@ -8,338 +8,17 @@ from functools import partial
 
 import pytest
 
-from scantree.compat import scandir
 from scantree import (
     DirNode,
     scantree,
     RecursionPath,
     RecursionFilter,
-    DirEntryReplacement,
-    CyclicLinkedDir, SymlinkRecursionError, LinkedDir)
+    CyclicLinkedDir,
+    SymlinkRecursionError,
+    LinkedDir
+)
 
-
-def assert_dir_entry_equal(de1, de2):
-    assert de1.path == de2.path
-    assert de1.name == de2.name
-    for method, kwargs in [
-        ('is_dir', {'follow_symlinks': True}),
-        ('is_dir', {'follow_symlinks': False}),
-        ('is_file', {'follow_symlinks': True}),
-        ('is_file', {'follow_symlinks': False}),
-        ('is_symlink', {}),
-        ('stat', {'follow_symlinks': True}),
-        ('stat', {'follow_symlinks': False}),
-        ('inode', {})
-    ]:
-        for attempt in range(1, 3):  # done two times to verify caching!
-            res1 = getattr(de1, method)(**kwargs)
-            res2 = getattr(de2, method)(**kwargs)
-            if not res1 == res2:
-                raise AssertionError(
-                    '\nde1.{method}(**{kwargs}) == {res1} != '
-                    '\nde2.{method}(**{kwargs}) == {res2} '
-                    '\n(attempt: {attempt})'
-                    '\nde1: {de1}'
-                    '\nde2: {de2}'.format(
-                        method=method,
-                        kwargs=kwargs,
-                        res1=res1,
-                        res2=res2,
-                        attempt=attempt,
-                        de1=de1,
-                        de2=de2
-                    )
-                )
-
-
-def assert_recursion_path_equal(p1, p2):
-    assert p1.root == p2.root
-    assert p1.relative == p2.relative
-    assert p1.real == p2.real
-    assert p1.absolute == p2.absolute
-    assert_dir_entry_equal(p1, p2)
-
-
-def assert_dir_node_equal(dn1, dn2):
-    assert_recursion_path_equal(dn1.path, dn2.path)
-    if isinstance(dn1, LinkedDir):
-        assert isinstance(dn2, LinkedDir)
-    elif isinstance(dn1, CyclicLinkedDir):
-        assert isinstance(dn2, CyclicLinkedDir)
-        assert_recursion_path_equal(dn1.target_path, dn2.target_path)
-    else:
-        for path1, path2 in zip(dn1.files, dn2.files):
-            assert_recursion_path_equal(path1, path2)
-        for sub_dn1, sub_dn2 in zip(dn1.directories, dn2.directories):
-            assert_dir_node_equal(sub_dn1, sub_dn2)
-
-
-def create_basic_entries(local_path):
-    d1 = local_path.join('d1')
-    d1.mkdir()
-    f1 = local_path.join('f1')
-    f1.write('file1')
-    local_path.join('ld1').mksymlinkto(d1)
-    local_path.join('lf1').mksymlinkto(f1)
-
-
-class TestDirEntryReplacement(object):
-    from scantree import DirEntryReplacement as test_class
-
-    def test_equivalence(self, tmpdir):
-        create_basic_entries(tmpdir)
-        for de_true in scandir(tmpdir):
-            de_rep_from_entry = self.test_class.from_dir_entry(de_true)
-            de_rep_from_path = self.test_class.from_path(tmpdir.join(de_true.name))
-            assert_dir_entry_equal(de_rep_from_entry, de_true)
-            assert de_rep_from_entry == de_true
-            assert_dir_entry_equal(de_rep_from_path, de_true)
-            assert de_rep_from_path == de_true
-
-            # test not equal
-            de_rep = self.test_class.from_dir_entry(de_true)
-            assert de_rep != 'other type'
-
-            for attribute in ['path', 'name']:
-                de_rep = self.test_class.from_dir_entry(de_true)
-                setattr(de_rep, attribute, "wrong value")
-                assert de_rep != de_true
-
-            for bool_attr in ['_is_dir', '_is_file', '_is_symlink']:
-                de_rep = self.test_class.from_dir_entry(de_true)
-                assert de_rep == de_true  # must load cache values before negating
-                setattr(de_rep, bool_attr, not getattr(de_rep, bool_attr))
-                assert de_rep != de_true
-
-            de_rep = self.test_class.from_dir_entry(de_true)
-            assert de_rep == de_true
-            de_rep._stat_sym = "wrong_value"
-            assert de_rep != de_true
-
-            de_rep = self.test_class.from_dir_entry(de_true)
-            assert de_rep == de_true
-            de_rep._stat_nosym = "wrong_value"
-            assert de_rep != de_true
-
-    def test_raise_on_not_exists(self, tmpdir):
-        with pytest.raises(IOError):
-            self.test_class.from_path(tmpdir.join('no such entry'))
-
-
-class TestRecursionPath(object):
-    from scantree import RecursionPath as test_class
-
-    def test_from_root(self, tmpdir):
-        create_basic_entries(tmpdir)
-        rpath = self.test_class.from_root(tmpdir.realpath())
-        assert rpath.root == rpath.real == tmpdir.realpath()
-        assert rpath.relative == ''
-        d1 = rpath._join(DirEntryReplacement.from_path(tmpdir.join('d1')))
-        assert d1.relative == 'd1'
-        assert d1.real == tmpdir.join('d1').realpath()
-        assert d1.root == rpath.root
-        ld1 = rpath._join(DirEntryReplacement.from_path(tmpdir.join('ld1')))
-        assert ld1.relative == 'ld1'
-        assert ld1.real == tmpdir.join('d1').realpath()
-        assert d1.root == rpath.root
-
-    def test_dir_entry_interface(self, tmpdir):
-        create_basic_entries(tmpdir)
-        for de_true in scandir(tmpdir):
-            de_repl = DirEntryReplacement.from_path(de_true.path)
-            rpath_from_de_true = self.test_class.from_root(de_true)
-            rpath_from_de_repl = self.test_class.from_root(de_repl)
-            rpath_from_path = self.test_class.from_root(de_true.path)
-            assert_dir_entry_equal(de_true, rpath_from_de_true)
-            assert_dir_entry_equal(de_true, rpath_from_de_repl)
-            assert_dir_entry_equal(de_true, rpath_from_path)
-
-    def test_scandir(self, tmpdir):
-        create_basic_entries(tmpdir)
-        rpath = self.test_class.from_root(tmpdir)
-        sub_rpaths = list(rpath.scandir())
-        sub_des = list(scandir(rpath))
-        assert len(sub_rpaths) == len(sub_des)
-        for sub_de, sub_rpath in zip(sub_des, sub_rpaths):
-            assert_dir_entry_equal(sub_de, sub_rpath)
-
-    def test_picklable(self, tmpdir):
-        rpath = self.test_class.from_root(tmpdir)
-        state = rpath.__getstate__()
-        dir_entry = state[-1]
-        assert isinstance(dir_entry, DirEntryReplacement)
-        rpath.__setstate__(state)
-        assert rpath._dir_entry is dir_entry
-
-
-def get_mock_recursion_path(relative, root=None, is_dir=False, is_symlink=False):
-    dir_entry = DirEntryReplacement(
-        path=relative,
-        name=os.path.basename(relative)
-    )
-    dir_entry._is_dir = is_dir
-    dir_entry._is_file = not is_dir
-    dir_entry._is_symlink = is_symlink
-    return RecursionPath(
-        root=root,
-        relative=relative,
-        real=None,
-        dir_entry=dir_entry
-    )
-
-
-class TestDirNode(object):
-    from scantree import DirNode as test_class
-
-    def test_init(self):
-        dn = self.test_class(RecursionPath.from_root('.'), [], [None])
-        assert dn.directories == tuple()
-        assert dn.files == (None,)
-
-    def test_empty(self):
-        dn = self.test_class(RecursionPath.from_root('.'), [], [])
-        assert dn.empty
-
-    def test_apply(self, tmpdir):
-        create_basic_entries(tmpdir)
-        root = RecursionPath.from_root(tmpdir)
-        d1 = next((rp for rp in root.scandir() if rp.name == 'd1'))
-        dn = self.test_class(
-            path=root,
-            directories=[self.test_class(d1, files=[1., 2.])],
-            files=[0.5]
-        )
-        dn_new = dn.apply(
-            file_apply=lambda x: x*2,
-            dir_apply=lambda dn_: sum(dn_.directories) ** 2 + sum(dn_.files)
-        )
-        assert dn_new == ((2 + 4) ** 2 + 1)
-
-    def test_leafpaths_filepaths(self):
-        rp_file1 = get_mock_recursion_path('file1')
-        rp_dir1 = get_mock_recursion_path('dir1')
-        rp_file2 = get_mock_recursion_path('dir1/file2')
-        rp_linked_dir = get_mock_recursion_path('linked_dir')
-        rp_cyclic = get_mock_recursion_path('cyclic')
-        rp_cyclic_target = get_mock_recursion_path('cyclic_target')
-
-        ordered_leafpaths = [rp_cyclic, rp_file2, rp_file1, rp_linked_dir]
-        ordered_filepaths = [rp_file2, rp_file1]
-
-        tree = self.test_class(
-            path=get_mock_recursion_path(''),
-            files=[rp_file1],
-            directories=[
-                CyclicLinkedDir(path=rp_cyclic, target_path=rp_cyclic_target),
-                self.test_class(
-                    path=rp_dir1,
-                    files=[rp_file2]
-                ),
-                LinkedDir(path=rp_linked_dir),
-            ]
-        )
-        assert tree.leafpaths() == ordered_leafpaths
-        assert tree.filepaths() == ordered_filepaths
-
-
-class TestLinkedDir(object):
-
-    def test_empty(self):
-        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
-        with pytest.raises(NotImplementedError):
-            ld.empty
-
-    def test_apply(self):
-        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
-        res = ld.apply(dir_apply=lambda x: (x, 1), file_apply=None)
-        assert res == (ld, 1)
-
-
-class TestCyclicLinkedDir(object):
-
-    def test_empty(self):
-        cld = CyclicLinkedDir(
-            path=get_mock_recursion_path('path/to/cld'),
-            target_path=get_mock_recursion_path('target')
-        )
-        assert cld.empty == False
-
-    def test_apply(self):
-        ld = LinkedDir(path=get_mock_recursion_path('path/to/ld'))
-        res = ld.apply(dir_apply=lambda x: (x, 1), file_apply=None)
-        assert res == (ld, 1)
-
-
-class TestRecursionFilterBase(object):
-    from scantree import RecursionFilter as test_class
-
-    @pytest.mark.parametrize(
-        'description, filter_kwargs, expected_output',
-        [
-            (
-                'include all',
-                {'linked_dirs': True, 'linked_files': True},
-                ['dir', 'dir/file.txt', 'ldir', 'dir/lfile']
-            ),
-            (
-                'default include all',
-                {},
-                ['dir', 'dir/file.txt', 'ldir', 'dir/lfile']
-            ),
-            (
-                'exclude linked dirs',
-                {'linked_dirs': False, 'linked_files': True},
-                ['dir', 'dir/file.txt', 'dir/lfile']
-            ),
-            (
-                'exclude linked files',
-                {'linked_dirs': True, 'linked_files': False},
-                ['dir', 'dir/file.txt', 'ldir']
-            ),
-            (
-                'exclude linked files and dirs',
-                {'linked_dirs': False, 'linked_files': False},
-                ['dir', 'dir/file.txt']
-            ),
-            (
-                'include only .txt files (dirs always included)',
-                {'match': ['*.txt']},
-                ['dir', 'dir/file.txt', 'ldir']
-            ),
-            (
-                'exclude .txt files (dirs always included)',
-                {'match': ['*', '!*.txt']},
-                ['dir', 'ldir', 'dir/lfile']
-            ),
-        ]
-    )
-    def test_call(
-        self,
-        description,
-        filter_kwargs,
-        expected_output
-    ):
-        paths = [
-            get_mock_recursion_path('dir', is_dir=True),
-            get_mock_recursion_path('dir/file.txt'),
-            get_mock_recursion_path('ldir', is_dir=True, is_symlink=True),
-            get_mock_recursion_path('dir/lfile', is_symlink=True),
-        ]
-        relpath_to_path = {path.relative: path for path in paths}
-        rfilter = self.test_class(**filter_kwargs)
-        filtered_paths = list(rfilter(paths))
-        assert filtered_paths == [
-            relpath_to_path[relpath] for relpath in expected_output
-        ]
-
-
-def _slow_identity(x, wait_time):
-    sleep(wait_time)
-    return x
-
-
-def get_slow_identity_f(wait_time):
-    return partial(_slow_identity, wait_time=wait_time)
+from scantree.test_utils import assert_dir_node_equal
 
 
 class TestScantree(object):
@@ -490,7 +169,6 @@ class TestScantree(object):
         root = tmpdir.join('root')
         root.join('d1').ensure(dir=True)
 
-        tree_default = scantree(root)
         tree_empty_true = scantree(root, include_empty=True)
 
         def rp(relative):
@@ -505,11 +183,11 @@ class TestScantree(object):
             directories=[DirNode(path=rp('d1'))]
         )
 
-        assert_dir_node_equal(tree_default, tree_empty_true_expected)
         assert_dir_node_equal(tree_empty_true, tree_empty_true_expected)
 
-        with pytest.raises(ValueError):
-            scantree(root, include_empty=False)
+        tree_empty_false = scantree(root, include_empty=False)
+        tree_empty_false_expected = DirNode(path=rp(''))
+        assert tree_empty_false == tree_empty_false_expected
 
     def test_multiprocess_speedup(self, tmpdir):
         num_files = 10
@@ -589,6 +267,15 @@ class TestScantree(object):
         end = time()
         elapsed_mp_cache = end - start
         assert elapsed_mp_cache < expected_max_elapsed
+
+
+def _slow_identity(x, wait_time):
+    sleep(wait_time)
+    return x
+
+
+def get_slow_identity_f(wait_time):
+    return partial(_slow_identity, wait_time=wait_time)
 
 
 class TestIncludedPaths(object):

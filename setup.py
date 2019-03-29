@@ -5,9 +5,7 @@ from setuptools import setup, find_packages
 VERSION = '0.0.1'
 
 DESCRIPTION = (
-    'Fast recursive directory iterator supporting: custom/wildcard '
-    'path filtering, efficient detection and handling of cyclic '
-    'symlinks, in memory representation of file-tree.'
+    'Flexible recursive directory iterator: scandir meets glob("**", recursive=True)'
 )
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -31,7 +29,7 @@ setup(
         'attrs>=18.0.0',
         'six>=1.12.0',
         'scandir>=1.9.0;python_version<"3.5"',
-        'pathlib>=1.0.1;python_version<"3.4"',
+        'pathlib2>=2.3.3;python_version<"3.4"',
         'pathspec>=0.5.9'
     ],
     packages=find_packages('src'),

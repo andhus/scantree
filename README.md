@@ -23,10 +23,11 @@ tree = scantree('/path/to/dir', RecursionFilter(match=['*.txt']))
 print([path.relative for path in tree.filepaths()])
 print([path.real for path in tree.filepaths()])
 ```
-```bash
+```
 ['d1/d2/file3.txt', 'd1/file2.txt', 'file1.txt']   
 ['/path/to/other_dir/file3.txt', '/path/to/dir/d1/file2.txt', '/path/to/dir/file1.txt']   
 ```
+
 Access metadata of directory entries in file tree:
 ```python
 d2 = tree.directories[0].directories[0]
@@ -55,7 +56,7 @@ hello_count = tree.apply(
 )
 print(hello_count)
 ```
-```bash
+```
 3
 ```
 
@@ -77,8 +78,7 @@ hello_count_tree =  tree.apply(
 from pprint import pprint
 pprint(hello_count_tree)
 ```
-
-```commandline
+```
 {'count': 3,
  'name': 'dir',
  'sub_counts': [{'count': 2, 'name': 'file1.txt'},
@@ -89,7 +89,6 @@ pprint(hello_count_tree)
                                  'name': 'd2',
                                  'sub_counts': [{'count': 0,
                                                  'name': 'file3.txt'}]}]}]}
-
 ```
 
 Flexible filtering:
@@ -107,6 +106,7 @@ without_palindrome_linked_dirs = scantree(
     ]
 )
 ```
+
 Comparison:
 ```python
 tree = scandir('path/to/dir')

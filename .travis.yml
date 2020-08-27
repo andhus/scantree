@@ -2,10 +2,10 @@ language: python
 
 jobs:
   include:
-#    - name: "Python 2.7 on Xenial Linux"
-#      python: 2.7
-#      env: TOXENV=py27
-#      install: pip install tox codecov
+    - name: "Python 2.7 on Xenial Linux"
+      python: 2.7
+      env: TOXENV=py27
+      install: pip install tox codecov
     - name: "Python 3.7 on Xenial Linux"
       python: 3.7
       env: TOXENV=py37

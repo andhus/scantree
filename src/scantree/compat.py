@@ -4,6 +4,7 @@ import sys
 from six import string_types
 import platform
 
+
 def fspath(path):
     """In python 2: os.path... and scandir does not support PathLike objects"""
     if isinstance(path, string_types):
@@ -17,10 +18,10 @@ def fspath(path):
 # otherwise use the scandir module version
 try:
     from os import scandir
-    if platform.system() != 'Windows':
-        from posix import DirEntry
-    else:
+    if platform.system() == 'Windows':
         from os import DirEntry
+    else:
+        from posix import DirEntry
 except ImportError:
     from scandir import scandir as _scandir
     from scandir import DirEntry

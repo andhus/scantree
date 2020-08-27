@@ -1,8 +1,12 @@
 from __future__ import print_function, division
 
 import sys
-from six import string_types
 import platform
+
+from os import readlink
+from os.path import realpath as _realpath, islink
+
+from six import string_types
 
 
 def fspath(path):
@@ -14,11 +18,13 @@ def fspath(path):
     raise TypeError('Object {} is not a path'.format(path))
 
 
+IS_WINDOWS = platform.system() == 'Windows'
+
 # Use the built-in version of scandir if possible (python > 3.5),
 # otherwise use the scandir module version
 try:
     from os import scandir
-    if platform.system() == 'Windows':
+    if IS_WINDOWS:
         from os import DirEntry
     else:
         from posix import DirEntry
@@ -35,3 +41,11 @@ if sys.version_info >= (3, 4):
     from pathlib import Path
 else:
     from pathlib2 import Path
+
+
+def realpath(path):
+    path = fspath(path)
+    if IS_WINDOWS:
+        return path if not islink(path) else readlink(path)
+
+    return _realpath(path)

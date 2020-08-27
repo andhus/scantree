@@ -18,6 +18,7 @@ from scantree import (
     LinkedDir
 )
 from scantree.test_utils import assert_dir_node_equal
+from scantree.compat import Path
 
 
 def ensure(path, **kwargs):
@@ -46,7 +47,7 @@ class TestScantree(object):
         tree = scantree(root)
 
         def rp(relative):
-            recursion_path = RecursionPath.from_root(root / relative)
+            recursion_path = RecursionPath.from_root(root / Path(*relative.split("/")))
             recursion_path.relative = relative
             recursion_path.root = str(root)
 
@@ -95,7 +96,7 @@ class TestScantree(object):
         tree = scantree(root, include_empty=include_empty)
 
         def rp(relative):
-            recursion_path = RecursionPath.from_root(root / relative)
+            recursion_path = RecursionPath.from_root(root / Path(*relative.split("/")))
             recursion_path.relative = relative
             recursion_path.root = str(root)
 
@@ -304,11 +305,11 @@ class TestIncludedPaths(object):
 
     def test_basic(self, tmp_path):
         ensure(tmp_path / 'root' / 'f1')
-        ensure(tmp_path / 'root/d1/f1')
+        ensure(tmp_path / 'root' / 'd1' / 'f1')
         ensure(tmp_path / 'root' / 'd1' / 'd11' / 'f1')
         ensure(tmp_path / 'root' / 'd2' / 'f1')
 
-        expected_filepaths = ['d1/d11/f1', 'd1/f1', 'd2/f1', 'f1']
+        expected_filepaths = fspaths(['d1/d11/f1', 'd1/f1', 'd2/f1', 'f1'])
         filepaths = self.get_leafpaths(tmp_path / 'root')
         assert filepaths == expected_filepaths
 
@@ -343,14 +344,14 @@ class TestIncludedPaths(object):
         root = tmp_path / 'root'
 
         filepaths = self.get_leafpaths(root, follow_links=True)
-        assert filepaths == ['d1/f1', 'd1/f2', 'f1']
+        assert filepaths == fspaths(['d1/f1', 'd1/f2', 'f1'])
 
         # default is `follow_links=True`
         filepaths = self.get_leafpaths(root)
-        assert filepaths == ['d1/f1', 'd1/f2', 'f1']
+        assert filepaths == fspaths(['d1/f1', 'd1/f2', 'f1'])
 
         filepaths = self.get_leafpaths(root, follow_links=False)
-        assert filepaths == ['d1/.', 'f1']
+        assert filepaths == [os.path.join('d1', '.'), 'f1']
 
         # correct way to ignore linked dirs completely:
         filepaths = self.get_leafpaths(
@@ -358,3 +359,7 @@ class TestIncludedPaths(object):
             recursion_filter=RecursionFilter(linked_dirs=False),
         )
         assert filepaths == ['f1']
+
+
+def fspaths(paths):
+    return [str(Path(path)) for path in paths]

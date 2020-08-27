@@ -9,6 +9,7 @@ from .compat import (
     fspath,
     scandir,
     DirEntry,
+    realpath
 )
 
 
@@ -37,7 +38,7 @@ class RecursionPath(object):
         return cls(
             root=dir_entry.path,
             relative='',
-            real=os.path.realpath(dir_entry.path),
+            real=realpath(dir_entry.path),
             dir_entry=dir_entry
         )
 
@@ -56,7 +57,7 @@ class RecursionPath(object):
             # For large number of files/directories it improves performance
             # significantly to only call `os.realpath` when we are actually
             # encountering a symlink.
-            real = os.path.realpath(real)
+            real = realpath(real)
 
         return attr.evolve(self, relative=relative, real=real, dir_entry=dir_entry)
 
@@ -147,7 +148,7 @@ class DirEntryReplacement(object):
             raise IOError('{} does not exist'.format(path))
         basename = os.path.basename(path)
         if basename in ['', '.', '..']:
-            name = os.path.basename(os.path.realpath(path))
+            name = os.path.basename(realpath(path))
         else:
             name = basename
         return cls(path, name)
@@ -203,8 +204,8 @@ class DirEntryReplacement(object):
             ('is_file', {'follow_symlinks': True}),
             ('is_file', {'follow_symlinks': False}),
             ('is_symlink', {}),
-            ('stat', {'follow_symlinks': True}),
-            ('stat', {'follow_symlinks': False}),
+            # ('stat', {'follow_symlinks': True}),  # TODO not working on windows
+            # ('stat', {'follow_symlinks': False}),
             ('inode', {})
         ]:
             this_res = getattr(self, method)(**kwargs)

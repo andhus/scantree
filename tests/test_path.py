@@ -1,8 +1,11 @@
 from __future__ import print_function, division, unicode_literals
 
+import platform
+
 import pytest
 
-from os.path import realpath as _realpath
+from os import readlink
+from os.path import realpath as _realpath, islink
 
 from scantree.compat import scandir, fspath, Path
 from scantree import DirEntryReplacement
@@ -10,7 +13,11 @@ from scantree.test_utils import assert_dir_entry_equal
 
 
 def realpath(path):
-    return _realpath(str(path))
+    path = str(path)
+    if platform.system() == 'Windows':
+        return path if not islink(path) else readlink(path)
+
+    return _realpath(path)
 
 
 def create_basic_entries(local_path):

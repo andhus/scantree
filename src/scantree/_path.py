@@ -25,7 +25,7 @@ class RecursionPath(object):
     root = attr.ib()
     relative = attr.ib()
     real = attr.ib()
-    _dir_entry = attr.ib(cmp=False)
+    _dir_entry = attr.ib(eq=False, order=False)
 
     @classmethod
     def from_root(cls, directory):
@@ -123,7 +123,7 @@ RecursionPath.__getstate__ = RecursionPath._getstate
 RecursionPath.__setstate__ = RecursionPath._setstate
 
 
-@attr.s(slots=True, cmp=False)
+@attr.s(slots=True, eq=False, order=False)
 class DirEntryReplacement(object):
     """Pure python implementation of the `DirEntry` interface (found in the external
     `scandir` module in Python < 3.5 or builtin `posix` module in Python >= 3.5)

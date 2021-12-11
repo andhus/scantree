@@ -1,23 +1,25 @@
 language: python
 dist: xenial
-
 install:
-  - pip install tox codecov
-
+- pip install tox codecov
 matrix:
- include:
+  include:
   - python: 2.7
     env: TOXENV=py27
   - python: 3.7
     env: TOXENV=py37
-
 script:
-  - tox
-
+- tox
 after_success:
-  - codecov
-
+- codecov
 notifications:
   email:
     on_success: never
     on_failure: always
+deploy:
+  provider: pypi
+  username: __token__
+  password:
+    secure: 0qZ4fnBI4wm6/gAD0gpxQdnkw+ZXcu/rpBMx1/oOW4pdlqVJRS7Zu7DYrJy9L/8BMvWY/hFnxopDMZv/nM0J6Da7JEfnjyQYRQzY3KpJbn9j6H3bfMFxv/x8b8F2qazQzSfQLiBs2r4QyMEJ42VVkLZoad5W2ZJRMXgCmUXJJyKvs8KWQRHRJmVuP7/PmSWArJDSXr/neU5xGPFjwXjxqdZpg+2X7b4PDD5D401BZx/3mnziUPIBm+j21kNd1lodWmNmdlRj210EGuPGzWJfft57GL9xHvbyoJhGi7Yn4z4PKBQ1J20Jqu6engA0DNZkblf1J/jLpOubJkPbJdAM4jOPU7/xyqYas4wOyXCGGfgL1TiwP2/od13ROYVX4dkhqZ/nLwAd5kzJqpkR9/7sUe0AXHTfl8hp1ZOxUKd1BIAyb0Al2iiK38axUE+pY3MNxL06r/huUyzvu+JJm/PLfttTcjUknmIEWGKvbwnr0h2p07Hh3K1oRawVdBWtCUQ7Hk1ffYQxWYiejyyTvnwsRvJrN9SZpEt67QpEUe6MPv18XnrJS/r98p2aRbcqx8MG9GUicnQ/LHAf8Y42nT//JqACzXjvlluynyaD6M3KC770bePZ6SdSIbbmWmGsTz8LX+OJEHeeOEPr8hadIeKcIIv0/4U9BaJAJFmxxFurASc=
+  on:
+    tags: true

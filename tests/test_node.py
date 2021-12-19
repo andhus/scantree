@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 
 import pytest
 
@@ -12,12 +12,12 @@ from scantree.test_utils import get_mock_recursion_path
 
 
 def create_basic_entries(local_path):
-    d1 = local_path.join('d1')
+    d1 = local_path / 'd1'
     d1.mkdir()
-    f1 = local_path.join('f1')
-    f1.write('file1')
-    local_path.join('ld1').mksymlinkto(d1)
-    local_path.join('lf1').mksymlinkto(f1)
+    f1 = local_path / 'f1'
+    f1.write_text('file1')
+    (local_path / 'ld1').symlink_to(d1, target_is_directory=True)
+    (local_path / 'lf1').symlink_to(f1)
 
 
 class TestDirNode(object):
@@ -32,9 +32,9 @@ class TestDirNode(object):
         dn = self.test_class(RecursionPath.from_root('.'), [], [])
         assert dn.empty
 
-    def test_apply(self, tmpdir):
-        create_basic_entries(tmpdir)
-        root = RecursionPath.from_root(tmpdir)
+    def test_apply(self, tmp_path):
+        create_basic_entries(tmp_path)
+        root = RecursionPath.from_root(tmp_path)
         d1 = next((rp for rp in root.scandir() if rp.name == 'd1'))
         dn = self.test_class(
             path=root,

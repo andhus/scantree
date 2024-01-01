@@ -4,8 +4,8 @@ import os
 
 import attr
 
+from pathlib import Path
 from .compat import (
-    Path,
     fspath,
     scandir,
     DirEntry,

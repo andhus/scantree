@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
 import sys
-from six import string_types
 
 
 def fspath(path):
     """In python 2: os.path... and scandir does not support PathLike objects"""
-    if isinstance(path, string_types):
+    if isinstance(path, str):
         return path
     if hasattr(path, '__fspath__'):
         return path.__fspath__()
@@ -26,8 +25,3 @@ except ImportError:
         if path is not None:
             path = fspath(path)
         return _scandir(path, *args, **kwargs)
-
-if sys.version_info >= (3, 4):
-    from pathlib import Path
-else:
-    from pathlib2 import Path

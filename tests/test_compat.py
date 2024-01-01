@@ -1,8 +1,11 @@
 from __future__ import print_function, division
 
+from os import scandir
+from posix import DirEntry
+
 import pytest
 
-from scantree.compat import fspath, scandir, DirEntry
+from scantree.compat import fspath
 
 
 class TestFSPath(object):

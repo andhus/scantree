@@ -1,15 +1,13 @@
 from __future__ import print_function, division
 
 import os
+from os import scandir
+from pathlib import Path
+from posix import DirEntry
 
 import attr
 
-from pathlib import Path
-from .compat import (
-    fspath,
-    scandir,
-    DirEntry,
-)
+from .compat import fspath
 
 
 @attr.s(slots=True)  # TODO consider make frozen.

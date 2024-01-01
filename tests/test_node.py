@@ -118,4 +118,4 @@ class TestCyclicLinkedDir(TestLinkedDir):
 
     def test_empty(self):
         cld = self.test_class(**self.get_default_kwargs())
-        assert cld.empty == False
+        assert cld.empty is False

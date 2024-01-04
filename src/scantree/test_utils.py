@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 import os
 
-from ._node import DirNode, LinkedDir, CyclicLinkedDir
+from ._node import LinkedDir, CyclicLinkedDir
 from ._path import RecursionPath, DirEntryReplacement
 
 

@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.com/andhus/scantree.svg?branch=master)](https://travis-ci.com/andhus/scantree)
 [![codecov](https://codecov.io/gh/andhus/scantree/branch/master/graph/badge.svg)](https://codecov.io/gh/andhus/scantree)
 # scantree
 Recursive directory iterator supporting:

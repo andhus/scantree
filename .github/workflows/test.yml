@@ -8,15 +8,9 @@ on:
     branches:
       - "main"
       - "master"
-    paths-ignore:
-      - "**.md"
-      - LICENSE
   pull_request:
     branches:
       - "*"
-    paths-ignore:
-      - "**.md"
-      - LICENSE
   workflow_dispatch:
   release:
     types: [published, edited]

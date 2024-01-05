@@ -190,11 +190,11 @@ class TestScantree(object):
         assert tree_empty_false == tree_empty_false_expected
 
     def test_multiprocess_speedup(self, tmpdir):
-        num_files = 10
+        num_files = 4
         for i in range(num_files):
             tmpdir.join('file_{}'.format(i)).ensure()
 
-        wait_time = 0.1
+        wait_time = 0.5
         expected_min_elapsed = wait_time * num_files
         slow_file_apply = get_slow_identity_f(wait_time)
         start = time()

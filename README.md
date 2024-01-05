@@ -1,20 +1,26 @@
 [![codecov](https://codecov.io/gh/andhus/scantree/branch/master/graph/badge.svg)](https://codecov.io/gh/andhus/scantree)
+
 # scantree
+
 Recursive directory iterator supporting:
+
 - flexible filtering including wildcard path matching
 - in memory representation of file-tree (for repeated access)
 - efficient access to directory entry properties (`posix.DirEntry` interface) extended with real path and path relative to the recursion root directory
 - detection and handling of cyclic symlinks
 
 ## Installation
+
 ```commandline
 pip install scantree
 ```
 
 ## Usage
+
 See source code for full documentation, some generic examples below.
 
 Get matching file paths:
+
 ```python
 from scantree import scantree, RecursionFilter
 
@@ -22,12 +28,14 @@ tree = scantree('/path/to/dir', RecursionFilter(match=['*.txt']))
 print([path.relative for path in tree.filepaths()])
 print([path.real for path in tree.filepaths()])
 ```
+
 ```
 ['d1/d2/file3.txt', 'd1/file2.txt', 'file1.txt']   
 ['/path/to/other_dir/file3.txt', '/path/to/dir/d1/file2.txt', '/path/to/dir/file1.txt']   
 ```
 
 Access metadata of directory entries in file tree:
+
 ```python
 d2 = tree.directories[0].directories[0]
 print(type(d2))
@@ -36,6 +44,7 @@ print(d2.path.real)
 print(d2.path.is_symlink())
 print(d2.files[0].relative)
 ```
+
 ```
 scantree._node.DirNode
 /path/to/dir/d1/d2
@@ -45,6 +54,7 @@ d1/d2/file3.txt
 ```
 
 Aggregate information by operating on tree:
+
 ```python
 hello_count = tree.apply(
     file_apply=lambda path: sum([
@@ -55,6 +65,7 @@ hello_count = tree.apply(
 )
 print(hello_count)
 ```
+
 ```
 3
 ```
@@ -77,6 +88,7 @@ hello_count_tree =  tree.apply(
 from pprint import pprint
 pprint(hello_count_tree)
 ```
+
 ```
 {'count': 3,
  'name': 'dir',
@@ -91,6 +103,7 @@ pprint(hello_count_tree)
 ```
 
 Flexible filtering:
+
 ```python
 without_hidden_files = scantree('.', RecursionFilter(match=['*', '!.*']))
 
@@ -107,6 +120,7 @@ without_palindrome_linked_dirs = scantree(
 ```
 
 Comparison:
+
 ```python
 tree = scandir('path/to/dir')
 # make some operations on filesystem, make sure file tree is the same:
@@ -124,6 +138,7 @@ assert (
 ```
 
 Inspect symlinks:
+
 ```python
 from scantree import CyclicLinkedDir
 

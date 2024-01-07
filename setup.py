@@ -2,7 +2,7 @@ import io
 import os
 from setuptools import setup, find_packages
 
-VERSION = '0.0.1'
+import versioneer
 
 DESCRIPTION = (
     'Flexible recursive directory iterator: scandir meets glob("**", recursive=True)'
@@ -17,7 +17,7 @@ except IOError:
 
 setup(
     name='scantree',
-    version=VERSION,
+    version=versioneer.get_version(),
     description=DESCRIPTION,
     long_description=long_description,
     long_description_content_type="text/markdown",

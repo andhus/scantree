@@ -4,7 +4,7 @@ name: Publish Python Package
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+'  # TODO add back v prefix?
+      - 'v[0-9]+.[0-9]+.[0-9]*'
 
 jobs:
   build:

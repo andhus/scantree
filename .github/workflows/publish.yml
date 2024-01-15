@@ -1,7 +1,10 @@
 # Based on https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/#
 name: Publish Python Package
 
-on: push
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'  # TODO add back v prefix?
 
 jobs:
   build:
@@ -10,6 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    # NOTE: tags are not present unless triggered by tag push
+    # - name: Get tags
+    #   run: git fetch --tags origin
+    # - name: List tags
+    #   run: git tag --list
+    # TODO: somehow versioneer does not pickup the tag when workflow is not triggered by a 
+    #  tag push, getting e.g. scantree-0+untagged.1.gd74b1d5,
+    #  see: https://github.com/andhus/scantree/actions/runs/7485873305/job/20375116541#step:7:42)
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -29,8 +40,8 @@ jobs:
         path: dist/
 
   publish-to-pypi:
-    name: >-
-      Publish to PyPI
+    name: Publish to PyPI
+    # TODO we need to make sure the tag matches the version!
     if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
     needs:
     - build
@@ -51,8 +62,7 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
-    name: >-
-      Sign and upload to GitHub Release
+    name: Sign and upload to GitHub Release
     needs:
     - publish-to-pypi
     runs-on: ubuntu-latest
@@ -94,6 +104,7 @@ jobs:
 
   publish-to-testpypi:
     name: Publish to TestPyPI
+    if: startsWith(github.ref, 'refs/tags/')  # only publish on tag pushes
     needs:
     - build
     runs-on: ubuntu-latest

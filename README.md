@@ -1,6 +1,6 @@
 [![codecov](https://codecov.io/gh/andhus/scantree/branch/master/graph/badge.svg)](https://codecov.io/gh/andhus/scantree)
 
-# scantree
+# `scantree`
 
 Recursive directory iterator supporting:
 

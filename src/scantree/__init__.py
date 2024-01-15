@@ -14,3 +14,6 @@ from ._scan import (
     scantree,
     SymlinkRecursionError
 )
+
+from . import _version
+__version__ = _version.get_versions()['version']

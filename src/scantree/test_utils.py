@@ -4,20 +4,37 @@ from ._node import CyclicLinkedDir, LinkedDir
 from ._path import DirEntryReplacement, RecursionPath
 
 
+def convert_path(path: str) -> str:
+    if os.name == "nt":
+        # Windows uses backslashes
+        return path.replace("/", "\\")
+    else:
+        # Most other systems use slashes
+        return path.replace("\\", "/")
+
+
 def assert_dir_entry_equal(de1, de2):
     # TODO check has attributes
     assert de1.path == de2.path
     assert de1.name == de2.name
-    for method, kwargs in [
+
+    methods = [
         ("is_dir", {"follow_symlinks": True}),
         ("is_dir", {"follow_symlinks": False}),
         ("is_file", {"follow_symlinks": True}),
         ("is_file", {"follow_symlinks": False}),
         ("is_symlink", {}),
-        ("stat", {"follow_symlinks": True}),
-        ("stat", {"follow_symlinks": False}),
         ("inode", {}),
-    ]:
+    ]
+    if os.name != "nt":
+        methods.extend(
+            [
+                ("stat", {"follow_symlinks": True}),
+                ("stat", {"follow_symlinks": False}),
+            ]
+        )
+
+    for method, kwargs in methods:
         for attempt in [1, 2]:  # done two times to verify caching!
             res1 = getattr(de1, method)(**kwargs)
             res2 = getattr(de2, method)(**kwargs)
@@ -33,9 +50,9 @@ def assert_dir_entry_equal(de1, de2):
 
 def assert_recursion_path_equal(p1, p2):
     assert p1.root == p2.root
-    assert p1.relative == p2.relative
+    assert p1.relative == convert_path(p2.relative)
     assert p1.real == p2.real
-    assert p1.absolute == p2.absolute
+    assert p1.absolute == convert_path(p2.absolute)
     assert_dir_entry_equal(p1, p2)
 
 

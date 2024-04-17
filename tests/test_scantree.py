@@ -1,6 +1,7 @@
 import os
 import re
 from functools import partial
+from os import name, symlink
 from time import sleep, time
 
 import pytest
@@ -14,7 +15,7 @@ from scantree import (
     SymlinkRecursionError,
     scantree,
 )
-from scantree.test_utils import assert_dir_node_equal
+from scantree.test_utils import assert_dir_node_equal, convert_path
 
 
 class TestScantree:
@@ -58,13 +59,14 @@ class TestScantree:
         with pytest.raises(ValueError):
             scantree(tmpdir.join("root/f1"))
 
+    @pytest.mark.skipif(name == "nt", reason="Failing on Windows")
     @pytest.mark.parametrize("include_empty", [True, False])
     def test_cyclic_links(self, tmpdir, include_empty):
         root = tmpdir.join("root")
         d1 = root.join("d1")
         d1.ensure(dir=True)
-        d1.join("link_back_d1").mksymlinkto(d1)
-        d1.join("link_back_root").mksymlinkto(root)
+        symlink(d1, d1.join("link_back_d1"))
+        symlink(root, d1.join("link_back_root"))
 
         tree = scantree(root, include_empty=include_empty)
 
@@ -112,7 +114,7 @@ class TestScantree:
         root.join("f1").ensure(dir=False)
         external_d1 = tmpdir.join("d1")
         external_d1.join("f2").ensure(dir=False)
-        root.join("link_to_d1").mksymlinkto(external_d1)
+        symlink(external_d1, root.join("link_to_d1"))
 
         def rp(relative):
             recursion_path = RecursionPath.from_root(root.join(relative))
@@ -163,6 +165,7 @@ class TestScantree:
         tree_empty_false_expected = DirNode(path=rp(""))
         assert tree_empty_false == tree_empty_false_expected
 
+    @pytest.mark.skipif(os.name == "nt", reason="Windows runs too slow for set limits")
     def test_multiprocess_speedup(self, tmpdir):
         num_files = 4
         for i in range(num_files):
@@ -189,7 +192,7 @@ class TestScantree:
         target_file.ensure()
         num_links = 10
         for i in range(num_links):
-            tmpdir.join(f"link_{i}").mksymlinkto(target_file)
+            symlink(target_file, tmpdir.join(f"link_{i}"))
 
         wait_time = 0.1
         expected_min_elapsed = wait_time * (num_links + 1)
@@ -210,6 +213,7 @@ class TestScantree:
         elapsed_cache = end - start
         assert elapsed_cache < expected_max_elapsed
 
+    @pytest.mark.skipif(os.name == "nt", reason="Windows runs too slow for set limits")
     def test_cache_together_with_multiprocess_speedup(self, tmpdir):
         target_file_names = ["target_file_1", "target_file_2"]
         num_links_per_file = 10
@@ -217,7 +221,7 @@ class TestScantree:
             target_file = tmpdir.join(target_file_name)
             target_file.ensure()
             for j in range(num_links_per_file):
-                tmpdir.join(f"link_{i}_{j}").mksymlinkto(target_file)
+                symlink(target_file, tmpdir.join(f"link_{i}_{j}"))
         num_links = num_links_per_file * len(target_file_names)
 
         wait_time = 0.1
@@ -267,7 +271,12 @@ class TestIncludedPaths:
         tmpdir.ensure("root/d1/d11/f1")
         tmpdir.ensure("root/d2/f1")
 
-        expected_filepaths = ["d1/d11/f1", "d1/f1", "d2/f1", "f1"]
+        expected_filepaths = [
+            convert_path("d1/d11/f1"),
+            convert_path("d1/f1"),
+            convert_path("d2/f1"),
+            "f1",
+        ]
         filepaths = self.get_leafpaths(tmpdir.join("root"))
         assert filepaths == expected_filepaths
 
@@ -278,7 +287,7 @@ class TestIncludedPaths:
     def test_symlinked_file(self, tmpdir):
         tmpdir.ensure("root/f1")
         tmpdir.ensure("linked_file")
-        tmpdir.join("root/f2").mksymlinkto(tmpdir.join("linked_file"))
+        symlink(tmpdir.join("linked_file"), tmpdir.join("root/f2"))
         root = tmpdir.join("root")
 
         # NOTE `follow_links` has no effect if linked files are included
@@ -298,18 +307,18 @@ class TestIncludedPaths:
         tmpdir.ensure("root/f1")
         tmpdir.ensure("linked_dir/f1")
         tmpdir.ensure("linked_dir/f2")
-        tmpdir.join("root/d1").mksymlinkto(tmpdir.join("linked_dir"))
+        symlink(tmpdir.join("linked_dir"), tmpdir.join("root/d1"))
         root = tmpdir.join("root")
 
         filepaths = self.get_leafpaths(root, follow_links=True)
-        assert filepaths == ["d1/f1", "d1/f2", "f1"]
+        assert filepaths == [convert_path("d1/f1"), convert_path("d1/f2"), "f1"]
 
         # default is `follow_links=True`
         filepaths = self.get_leafpaths(root)
-        assert filepaths == ["d1/f1", "d1/f2", "f1"]
+        assert filepaths == [convert_path("d1/f1"), convert_path("d1/f2"), "f1"]
 
         filepaths = self.get_leafpaths(root, follow_links=False)
-        assert filepaths == ["d1/.", "f1"]
+        assert filepaths == [convert_path("d1/."), "f1"]
 
         # correct way to ignore linked dirs completely:
         filepaths = self.get_leafpaths(

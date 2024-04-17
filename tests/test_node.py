@@ -1,16 +1,18 @@
+from os import symlink
+
 import pytest
 
 from scantree import CyclicLinkedDir, DirNode, LinkedDir, RecursionPath
 from scantree.test_utils import get_mock_recursion_path
 
 
-def create_basic_entries(local_path):
+def create_basic_entries(local_path: str):
     d1 = local_path.join("d1")
     d1.mkdir()
     f1 = local_path.join("f1")
     f1.write("file1")
-    local_path.join("ld1").mksymlinkto(d1)
-    local_path.join("lf1").mksymlinkto(f1)
+    symlink(d1, local_path.join("ld1"))
+    symlink(f1, local_path.join("lf1"))
 
 
 class TestDirNode:

@@ -1,7 +1,6 @@
 import os
-from os import scandir
+from os import DirEntry, scandir
 from pathlib import Path
-from posix import DirEntry
 
 import attr
 
@@ -15,8 +14,7 @@ class RecursionPath:
 
     NOTE: this class is normally only ever instantiated by the `scantree` function.
 
-    The class provides the `DirEntry` interface (found in the external `scandir`
-    module in Python < 3.5 or builtin `posix` module in Python >= 3.5).
+    The class provides the os-portable `DirEntry` interface.
     """
 
     root = attr.ib()
@@ -122,8 +120,8 @@ RecursionPath.__setstate__ = RecursionPath._setstate
 
 @attr.s(slots=True, eq=False, order=False)
 class DirEntryReplacement:
-    """Pure python implementation of the `DirEntry` interface (found in the external
-    `scandir` module in Python < 3.5 or builtin `posix` module in Python >= 3.5)
+    """Pure python implementation of the os-portable `DirEntry` interface.
+
 
     A `DirEntry` cannot be instantiated directly (only returned from a call to
     `scandir`). This class offers a drop in replacement. Useful in testing and for

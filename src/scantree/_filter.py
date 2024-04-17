@@ -1,11 +1,9 @@
-from __future__ import print_function, division
-
 from pathspec import PathSpec
-from pathspec.util import normalize_file, match_file
 from pathspec.patterns import GitWildMatchPattern
+from pathspec.util import match_file, normalize_file
 
 
-class RecursionFilter(object):
+class RecursionFilter:
     """Callable object for filtering of sequence of `RecursionPath`:s.
 
     Intended for use as `recursion_filter` argument in `scantree`.
@@ -20,6 +18,7 @@ class RecursionFilter(object):
             (https://github.com/cpburnz/python-path-specification). Default `None`
             which is equivalent to ['*'] matching all file paths.
     """
+
     def __init__(
         self,
         linked_dirs=True,
@@ -28,11 +27,10 @@ class RecursionFilter(object):
     ):
         self.linked_dirs = linked_dirs
         self.linked_files = linked_files
-        self._match_patterns = tuple('*') if match is None else tuple(match)
-        if self._match_patterns != tuple('*'):
+        self._match_patterns = tuple("*") if match is None else tuple(match)
+        if self._match_patterns != tuple("*"):
             self._path_spec = PathSpec.from_lines(
-                GitWildMatchPattern,
-                self.match_patterns
+                GitWildMatchPattern, self.match_patterns
             )
         else:
             self._path_spec = None

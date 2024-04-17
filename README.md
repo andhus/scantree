@@ -30,8 +30,8 @@ print([path.real for path in tree.filepaths()])
 ```
 
 ```
-['d1/d2/file3.txt', 'd1/file2.txt', 'file1.txt']   
-['/path/to/other_dir/file3.txt', '/path/to/dir/d1/file2.txt', '/path/to/dir/file1.txt']   
+['d1/d2/file3.txt', 'd1/file2.txt', 'file1.txt']
+['/path/to/other_dir/file3.txt', '/path/to/dir/d1/file2.txt', '/path/to/dir/file1.txt']
 ```
 
 Access metadata of directory entries in file tree:
@@ -111,8 +111,8 @@ without_palindrome_linked_dirs = scantree(
     '.',
     lambda paths: [
         p for p in paths if not (
-            p.is_dir() and 
-            p.is_symlink() and 
+            p.is_dir() and
+            p.is_symlink() and
             p.name == p.name[::-1]
         )
     ]
@@ -128,11 +128,11 @@ assert tree == scandir('path/to/dir')
 
 # tree contains absolute/real path info:
 import shutil
-shutil.copytree('path/to/dir', 'path/to/other_dir')   
+shutil.copytree('path/to/dir', 'path/to/other_dir')
 new_tree = scandir('path/to/other_dir')
 assert tree != new_tree
 assert (
-    [p.relative for p in tree.leafpaths()] == 
+    [p.relative for p in tree.leafpaths()] ==
     [p.relative for p in new_tree.leafpaths()]
 )
 ```

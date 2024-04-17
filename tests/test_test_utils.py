@@ -1,23 +1,18 @@
-from __future__ import print_function, division
-
+import attr
 import pytest
 
-import attr
-
-from scantree.test_utils import assert_dir_entry_equal
 from scantree import DirEntryReplacement
+from scantree.test_utils import assert_dir_entry_equal
 
 
-class MockStat(object):
-
+class MockStat:
     def __init__(self, st_ino=None):
         self.st_ino = st_ino
 
 
-class TestAssertDirEntryEqual(object):
-
+class TestAssertDirEntryEqual:
     def get_mock_dir_entry(self):
-        de = DirEntryReplacement(path='/path/to/mock', name='mock')
+        de = DirEntryReplacement(path="/path/to/mock", name="mock")
         de._is_dir = True
         de._is_file = False
         de._is_symlink = False
@@ -31,16 +26,16 @@ class TestAssertDirEntryEqual(object):
         assert_dir_entry_equal(de, de)
 
     @pytest.mark.parametrize(
-        'kwargs',
+        "kwargs",
         [
-            {'path': 'other/path'},
-            {'name': 'other_name'},
-            {'_is_dir': False},
-            {'_is_file': True},
-            {'_is_symlink': True},
-            {'_stat_sym': MockStat(11)},
-            {'_stat_nosym': MockStat(22)},
-        ]
+            {"path": "other/path"},
+            {"name": "other_name"},
+            {"_is_dir": False},
+            {"_is_file": True},
+            {"_is_symlink": True},
+            {"_stat_sym": MockStat(11)},
+            {"_stat_nosym": MockStat(22)},
+        ],
     )
     def test_not_equal(self, kwargs):
         de = self.get_mock_dir_entry()

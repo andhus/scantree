@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import os
 from os import scandir
 from pathlib import Path
@@ -11,7 +9,7 @@ from .compat import fspath
 
 
 @attr.s(slots=True)  # TODO consider make frozen.
-class RecursionPath(object):
+class RecursionPath:
     """Caches the properties of directory entries including the path relative to the
     root directory for recursion.
 
@@ -20,6 +18,7 @@ class RecursionPath(object):
     The class provides the `DirEntry` interface (found in the external `scandir`
     module in Python < 3.5 or builtin `posix` module in Python >= 3.5).
     """
+
     root = attr.ib()
     relative = attr.ib()
     real = attr.ib()
@@ -34,9 +33,9 @@ class RecursionPath(object):
             dir_entry = DirEntryReplacement.from_path(directory)
         return cls(
             root=dir_entry.path,
-            relative='',
+            relative="",
             real=os.path.realpath(dir_entry.path),
-            dir_entry=dir_entry
+            dir_entry=dir_entry,
         )
 
     def scandir(self):
@@ -61,7 +60,7 @@ class RecursionPath(object):
     @property
     def absolute(self):
         """The absolute path to this entry"""
-        if self.relative == '':
+        if self.relative == "":
             return self.root  # don't join in this case as that appends trailing '/'
         return os.path.join(self.root, self.relative)
 
@@ -107,7 +106,7 @@ class RecursionPath(object):
             self.root,
             self.relative,
             self.real,
-            DirEntryReplacement.from_dir_entry(self._dir_entry)
+            DirEntryReplacement.from_dir_entry(self._dir_entry),
         )
 
     @staticmethod
@@ -122,7 +121,7 @@ RecursionPath.__setstate__ = RecursionPath._setstate
 
 
 @attr.s(slots=True, eq=False, order=False)
-class DirEntryReplacement(object):
+class DirEntryReplacement:
     """Pure python implementation of the `DirEntry` interface (found in the external
     `scandir` module in Python < 3.5 or builtin `posix` module in Python >= 3.5)
 
@@ -130,6 +129,7 @@ class DirEntryReplacement(object):
     `scandir`). This class offers a drop in replacement. Useful in testing and for
     representing the root directory for `scantree` implementation.
     """
+
     path = attr.ib(converter=fspath)
     name = attr.ib()
     _is_dir = attr.ib(init=False, default=None)
@@ -142,9 +142,9 @@ class DirEntryReplacement(object):
     def from_path(cls, path):
         path = fspath(path)
         if not os.path.exists(path):
-            raise IOError('{} does not exist'.format(path))
+            raise OSError(f"{path} does not exist")
         basename = os.path.basename(path)
-        if basename in ['', '.', '..']:
+        if basename in ["", ".", ".."]:
             name = os.path.basename(os.path.realpath(path))
         else:
             name = basename
@@ -196,14 +196,14 @@ class DirEntryReplacement(object):
         if not self.name == other.name:
             return False
         for method, kwargs in [
-            ('is_dir', {'follow_symlinks': True}),
-            ('is_dir', {'follow_symlinks': False}),
-            ('is_file', {'follow_symlinks': True}),
-            ('is_file', {'follow_symlinks': False}),
-            ('is_symlink', {}),
-            ('stat', {'follow_symlinks': True}),
-            ('stat', {'follow_symlinks': False}),
-            ('inode', {})
+            ("is_dir", {"follow_symlinks": True}),
+            ("is_dir", {"follow_symlinks": False}),
+            ("is_file", {"follow_symlinks": True}),
+            ("is_file", {"follow_symlinks": False}),
+            ("is_symlink", {}),
+            ("stat", {"follow_symlinks": True}),
+            ("stat", {"follow_symlinks": False}),
+            ("inode", {}),
         ]:
             this_res = getattr(self, method)(**kwargs)
             other_res = getattr(other, method)(**kwargs)

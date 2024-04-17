@@ -84,7 +84,7 @@ class TestLinkedDir:
     def test_empty(self):
         ld = self.test_class(**self.get_default_kwargs())
         with pytest.raises(AttributeError):
-            ld.empty
+            ld.empty  # noqa
 
     def test_apply(self):
         ld = self.test_class(**self.get_default_kwargs())

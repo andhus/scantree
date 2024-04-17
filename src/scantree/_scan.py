@@ -1,20 +1,11 @@
-from __future__ import print_function, division
-
 import os
-
 from multiprocessing.pool import Pool
 
 from pathspec import RecursionError as _RecursionError
 
-from .compat import fspath
-from ._node import (
-    DirNode,
-    LinkedDir,
-    CyclicLinkedDir,
-    identity,
-    is_empty_dir_node
-)
+from ._node import CyclicLinkedDir, DirNode, LinkedDir, identity, is_empty_dir_node
 from ._path import RecursionPath
+from .compat import fspath
 
 
 def scantree(
@@ -26,7 +17,7 @@ def scantree(
     allow_cyclic_links=True,
     cache_file_apply=False,
     include_empty=False,
-    jobs=1
+    jobs=1,
 ):
     """Recursively scan the file tree under the given directory.
 
@@ -197,9 +188,9 @@ def _scantree_multiprocess(**kwargs):
 
     Note that it is only the `file_apply` function that is parallelized.
     """
-    file_apply = kwargs.pop('file_apply')
-    dir_apply = kwargs.pop('dir_apply')
-    jobs = kwargs.pop('jobs')
+    file_apply = kwargs.pop("file_apply")
+    dir_apply = kwargs.pop("dir_apply")
+    jobs = kwargs.pop("jobs")
 
     file_paths = []
 
@@ -227,9 +218,9 @@ def _verify_is_directory(directory):
     ValueError"""
     directory = fspath(directory)
     if not os.path.exists(directory):
-        raise ValueError('{}: No such directory'.format(directory))
+        raise ValueError(f"{directory}: No such directory")
     if not os.path.isdir(directory):
-        raise ValueError('{}: Is not a directory'.format(directory))
+        raise ValueError(f"{directory}: Is not a directory")
 
 
 def _cached_by_realpath(file_apply):
@@ -291,7 +282,7 @@ def _scantree_recursive(
             links are detected.
     """
     fwd_kwargs = vars()
-    del fwd_kwargs['path']
+    del fwd_kwargs["path"]
 
     if path.is_symlink():
         if not follow_links:
@@ -329,13 +320,14 @@ class SymlinkRecursionError(_RecursionError):
     overriding the built-in error!) and with a more informative string representation
     (used in `dirhash.cli`).
     """
+
     def __init__(self, path, target_path):
-        super(SymlinkRecursionError, self).__init__(
+        super().__init__(
             real_path=path.real,
             first_path=os.path.join(target_path.root, target_path.relative),
-            second_path=os.path.join(path.root, path.relative)
+            second_path=os.path.join(path.root, path.relative),
         )
 
     def __str__(self):
         # _RecursionError.__str__ prints args without context
-        return 'Symlink recursion: {}'.format(self.message)
+        return f"Symlink recursion: {self.message}"

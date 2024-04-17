@@ -1,12 +1,10 @@
-from __future__ import print_function, division
-
 import attr
 
 from ._path import RecursionPath
 
 
 @attr.s(slots=True, frozen=True)
-class DirNode(object):
+class DirNode:
     """A directory node in a Directed Acyclic Graph (DAG) representing a file system
     tree.
 
@@ -19,9 +17,10 @@ class DirNode(object):
         files ([object]): The result of `scantree` `file_apply` argument
             applied to the files of this directory.
     """
+
     path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
-    files = attr.ib(default=tuple(), converter=tuple)
-    directories = attr.ib(default=tuple(), converter=tuple)
+    files = attr.ib(default=(), converter=tuple)
+    directories = attr.ib(default=(), converter=tuple)
 
     @property
     def empty(self):
@@ -51,7 +50,7 @@ class DirNode(object):
         dir_node = DirNode(
             self.path,
             [dir_.apply(dir_apply, file_apply) for dir_ in self.directories],
-            [file_apply(file_) for file_ in self.files]
+            [file_apply(file_) for file_ in self.files],
         )
         return dir_apply(dir_node)
 
@@ -87,8 +86,8 @@ class DirNode(object):
     def filepaths(self):
         """Get the filepaths of the file tree under this directory.
 
-         # Returns:
-            A list of `RecursionPaths` sorted on relative path.
+        # Returns:
+           A list of `RecursionPaths` sorted on relative path.
         """
         files = []
 
@@ -101,7 +100,7 @@ class DirNode(object):
 
 
 @attr.s(slots=True, frozen=True)
-class LinkedDir(object):
+class LinkedDir:
     """This node represents a symbolic link to a directory.
 
     It is created by `scantree` to represent a linked directory when the argument
@@ -112,42 +111,43 @@ class LinkedDir(object):
     # Arguments:
         path (RecursionPath): The recursion path to the *link* to a directory.
     """
+
     path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
 
     @property
     def directories(self):
         raise AttributeError(
-            '`directories` is undefined for `LinkedDir` nodes. Use e.g. '
-            '`[de for de in scandir(linked_dir.path.real) if de.is_dir()]` '
-            'to get a list of the sub directories of the linked directory'
+            "`directories` is undefined for `LinkedDir` nodes. Use e.g. "
+            "`[de for de in scandir(linked_dir.path.real) if de.is_dir()]` "
+            "to get a list of the sub directories of the linked directory"
         )
 
     @property
     def files(self):
         raise AttributeError(
-            '`files` is undefined for `LinkedDir` nodes. Use e.g. '
-            '`[de for de in scandir(linked_dir.path.real) if de.is_file()]` '
-            ' to get a list of the files of the linked directory'
+            "`files` is undefined for `LinkedDir` nodes. Use e.g. "
+            "`[de for de in scandir(linked_dir.path.real) if de.is_file()]` "
+            " to get a list of the files of the linked directory"
         )
 
     @property
     def entries(self):
         raise AttributeError(
-            '`entries` is undefined for `LinkedDir` nodes. Use e.g. '
-            '`scandir(linked_dir.path.real)` to get the entries of the linked '
-            'directory'
+            "`entries` is undefined for `LinkedDir` nodes. Use e.g. "
+            "`scandir(linked_dir.path.real)` to get the entries of the linked "
+            "directory"
         )
 
     @property
     def empty(self):
-        raise AttributeError('`empty` is undefined for `LinkedDir` nodes.')
+        raise AttributeError("`empty` is undefined for `LinkedDir` nodes.")
 
     def apply(self, dir_apply, file_apply=None):
         return dir_apply(self)
 
 
 @attr.s(slots=True, frozen=True)
-class CyclicLinkedDir(object):
+class CyclicLinkedDir:
     """This node represents a symbolic link causing a cycle of symlinks.
 
     It is created by `scantree` to represent a cyclic links when the argument
@@ -161,31 +161,32 @@ class CyclicLinkedDir(object):
         target_path (RecursionPath): The recursion path to the target directory of
             the link (which is a parent of this directory).
     """
+
     path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
     target_path = attr.ib(validator=attr.validators.instance_of(RecursionPath))
 
     @property
     def directories(self):
         raise AttributeError(
-            '`directories` is undefined for `CyclicLinkedDir` to avoid infinite '
-            'recursion. `target_path` property contains the `RecursionPath` for the '
-            'target directory.'
+            "`directories` is undefined for `CyclicLinkedDir` to avoid infinite "
+            "recursion. `target_path` property contains the `RecursionPath` for the "
+            "target directory."
         )
 
     @property
     def files(self):
         raise AttributeError(
-            '`files` is undefined for `CyclicLinkedDir` to avoid infinite '
-            'recursion. `target_path` property contains the `RecursionPath` for the '
-            'target directory.'
+            "`files` is undefined for `CyclicLinkedDir` to avoid infinite "
+            "recursion. `target_path` property contains the `RecursionPath` for the "
+            "target directory."
         )
 
     @property
     def entries(self):
         raise AttributeError(
-            '`entries` is undefined for `CyclicLinkedDir` to avoid infinite '
-            'recursion. `target_path` property contains the `RecursionPath` for the '
-            'target directory.'
+            "`entries` is undefined for `CyclicLinkedDir` to avoid infinite "
+            "recursion. `target_path` property contains the `RecursionPath` for the "
+            "target directory."
         )
 
     @property

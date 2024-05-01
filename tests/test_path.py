@@ -1,4 +1,5 @@
-from os import name, scandir, symlink
+from os import name as os_name
+from os import scandir, symlink
 from pathlib import Path
 
 import pytest
@@ -8,7 +9,7 @@ from scantree.compat import fspath
 from scantree.test_utils import assert_dir_entry_equal
 
 
-def create_basic_entries(local_path: str):
+def create_basic_entries(local_path):
     d1 = local_path.join("d1")
     d1.mkdir()
     f1 = local_path.join("f1")
@@ -20,7 +21,7 @@ def create_basic_entries(local_path: str):
 class TestDirEntryReplacement:
     test_class = DirEntryReplacement
 
-    @pytest.mark.skipif(name == "nt", reason="Failing on Windows")
+    @pytest.mark.skipif(os_name == "nt", reason="Failing on Windows")
     def test_equivalence(self, tmpdir):
         create_basic_entries(tmpdir)
         for de_true in scandir(tmpdir):

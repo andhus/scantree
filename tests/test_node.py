@@ -6,7 +6,7 @@ from scantree import CyclicLinkedDir, DirNode, LinkedDir, RecursionPath
 from scantree.test_utils import get_mock_recursion_path
 
 
-def create_basic_entries(local_path: str):
+def create_basic_entries(local_path):
     d1 = local_path.join("d1")
     d1.mkdir()
     f1 = local_path.join("f1")

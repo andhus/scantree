@@ -24,13 +24,13 @@ def assert_dir_entry_equal(de1, de2):
         ("is_file", {"follow_symlinks": True}),
         ("is_file", {"follow_symlinks": False}),
         ("is_symlink", {}),
-        ("inode", {}),
     ]
     if os.name != "nt":
         methods.extend(
             [
                 ("stat", {"follow_symlinks": True}),
                 ("stat", {"follow_symlinks": False}),
+                ("inode", {}),
             ]
         )
 

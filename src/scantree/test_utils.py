@@ -5,7 +5,7 @@ from ._path import DirEntryReplacement, RecursionPath
 
 
 def convert_path(path: str) -> str:
-    if os.name == "nt":
+    if os.name == "nt":  # pragma: no cover
         # Windows uses backslashes
         return path.replace("/", "\\")
     else:
@@ -25,7 +25,7 @@ def assert_dir_entry_equal(de1, de2):
         ("is_file", {"follow_symlinks": False}),
         ("is_symlink", {}),
     ]
-    if os.name != "nt":
+    if os.name != "nt":  # pragma: no cover
         methods.extend(
             [
                 ("stat", {"follow_symlinks": True}),

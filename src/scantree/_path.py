@@ -201,7 +201,7 @@ class DirEntryReplacement:
             ("is_file", {"follow_symlinks": False}),
             ("is_symlink", {}),
         ]
-        if os_name != "nt":
+        if os_name != "nt":  # pragma: no cover
             methods.extend(
                 [
                     ("stat", {"follow_symlinks": True}),

@@ -61,9 +61,8 @@ def scantree(
         recursion_filter (f: f([RecursionPath]) -> [RecursionPath]): A filter
             function, defining which files to include and which subdirectories to
             scan, e.g. an instance of `scantree.RecursionFilter`.
-            The `RecursionPath` implements the `DirEntry` interface (found in
-            the external `scandir` module in Python < 3.5 or builtin `posix` module
-            in Python >= 3.5). It caches metadata efficiently and, in addition to
+            The `RecursionPath` implements the os-portable `DirEntry` interface.
+            It caches metadata efficiently and, in addition to
             DirEntry, provides real path and path relative to the root directory for
             the recursion as properties, see `scantree.RecursionPath` for further
             details.

@@ -1,7 +1,7 @@
 import os
 from os import scandir
 from pathlib import Path
-from posix import DirEntry
+from os import DirEntry
 
 import attr
 

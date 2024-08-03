@@ -1,5 +1,4 @@
-from os import scandir
-from posix import DirEntry
+from os import DirEntry, scandir
 
 import pytest
 

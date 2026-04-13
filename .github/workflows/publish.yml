@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # NOTE: tags are not present unless triggered by tag push
       # - name: Get tags
       #   run: git fetch --tags origin

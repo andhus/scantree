@@ -22,7 +22,7 @@ jobs:
       #  tag push, getting e.g. scantree-0+untagged.1.gd74b1d5,
       #  see: https://github.com/andhus/scantree/actions/runs/7485873305/job/20375116541#step:7:42)
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
       - name: Install pypa/build

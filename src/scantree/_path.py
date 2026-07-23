@@ -26,7 +26,7 @@ class RecursionPath:
     @classmethod
     def from_root(cls, directory):
         """Instantiate a `RecursionPath` from given directory."""
-        if isinstance(directory, (DirEntry, DirEntryReplacement)):
+        if isinstance(directory, DirEntry | DirEntryReplacement):
             dir_entry = directory
         else:
             dir_entry = DirEntryReplacement.from_path(directory)
@@ -188,7 +188,7 @@ class DirEntryReplacement:
         return self.stat(follow_symlinks=False).st_ino
 
     def __eq__(self, other):
-        if not isinstance(other, (DirEntryReplacement, DirEntry)):
+        if not isinstance(other, DirEntryReplacement | DirEntry):
             return False
         if not self.path == other.path:
             return False

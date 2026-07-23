@@ -64,9 +64,9 @@ def assert_dir_node_equal(dn1, dn2):
         assert isinstance(dn2, CyclicLinkedDir)
         assert_recursion_path_equal(dn1.target_path, dn2.target_path)
     else:
-        for path1, path2 in zip(dn1.files, dn2.files):
+        for path1, path2 in zip(dn1.files, dn2.files, strict=False):
             assert_recursion_path_equal(path1, path2)
-        for sub_dn1, sub_dn2 in zip(dn1.directories, dn2.directories):
+        for sub_dn1, sub_dn2 in zip(dn1.directories, dn2.directories, strict=False):
             assert_dir_node_equal(sub_dn1, sub_dn2)
 
 

@@ -1,8 +1,9 @@
 from os import name as os_name
-from os import scandir, symlink
+from os import scandir
 from pathlib import Path
 
 import pytest
+from conftest import symlink
 
 from scantree import DirEntryReplacement
 from scantree.compat import fspath

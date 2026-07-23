@@ -1,10 +1,11 @@
 import os
 import re
 from functools import partial
-from os import name, symlink
+from os import name
 from time import sleep, time
 
 import pytest
+from conftest import symlink
 
 from scantree import (
     CyclicLinkedDir,

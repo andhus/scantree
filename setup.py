@@ -24,7 +24,7 @@ setup(
     author="Anders Huss",
     author_email="andhus@kth.se",
     license="MIT",
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     install_requires=["attrs>=18.0.0", "pathspec>=1.0.0"],
     packages=find_packages("src"),
     package_dir={"": "src"},

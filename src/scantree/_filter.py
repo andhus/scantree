@@ -1,5 +1,4 @@
 from pathspec import PathSpec
-from pathspec.patterns import GitWildMatchPattern
 from pathspec.util import match_file, normalize_file
 
 
@@ -29,9 +28,7 @@ class RecursionFilter:
         self.linked_files = linked_files
         self._match_patterns = tuple("*") if match is None else tuple(match)
         if self._match_patterns != tuple("*"):
-            self._path_spec = PathSpec.from_lines(
-                GitWildMatchPattern, self.match_patterns
-            )
+            self._path_spec = PathSpec.from_lines("gitignore", self.match_patterns)
         else:
             self._path_spec = None
 

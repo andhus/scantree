@@ -1,6 +1,5 @@
-from os import symlink
-
 import pytest
+from conftest import symlink
 
 from scantree import CyclicLinkedDir, DirNode, LinkedDir, RecursionPath
 from scantree.test_utils import get_mock_recursion_path

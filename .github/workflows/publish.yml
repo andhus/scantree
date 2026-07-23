@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # NOTE: tags are not present unless triggered by tag push
       # - name: Get tags
       #   run: git fetch --tags origin
@@ -22,7 +22,7 @@ jobs:
       #  tag push, getting e.g. scantree-0+untagged.1.gd74b1d5,
       #  see: https://github.com/andhus/scantree/actions/runs/7485873305/job/20375116541#step:7:42)
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
       - name: Install pypa/build
@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: python-package-distributions
           path: dist/
@@ -73,12 +73,12 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: python-package-distributions
           path: dist/
       - name: Sign the dists with Sigstore
-        uses: sigstore/gh-action-sigstore-python@v2.1.1
+        uses: sigstore/gh-action-sigstore-python@v3.3.0
         with:
           inputs: >-
             ./dist/*.tar.gz
@@ -118,7 +118,7 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: python-package-distributions
           path: dist/

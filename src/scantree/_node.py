@@ -76,7 +76,7 @@ class DirNode:
             leafs.append(path)
 
         def dir_apply(dir_node):
-            if isinstance(dir_node, (LinkedDir, CyclicLinkedDir)) or dir_node.empty:
+            if isinstance(dir_node, LinkedDir | CyclicLinkedDir) or dir_node.empty:
                 leafs.append(dir_node.path)
 
         self.apply(dir_apply=dir_apply, file_apply=file_apply)

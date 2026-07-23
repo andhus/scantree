@@ -1,8 +1,9 @@
 from os import name as os_name
-from os import scandir, symlink
+from os import scandir
 from pathlib import Path
 
 import pytest
+from conftest import symlink
 
 from scantree import DirEntryReplacement
 from scantree.compat import fspath
@@ -96,7 +97,7 @@ class TestRecursionPath:
         sub_rpaths = list(rpath.scandir())
         sub_des = list(scandir(rpath))
         assert len(sub_rpaths) == len(sub_des)
-        for sub_de, sub_rpath in zip(sub_des, sub_rpaths):
+        for sub_de, sub_rpath in zip(sub_des, sub_rpaths, strict=False):
             assert_dir_entry_equal(sub_de, sub_rpath)
 
     def test_picklable(self, tmpdir):
